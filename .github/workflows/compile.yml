@@ -76,7 +76,6 @@ jobs:
         sudo apt-get install -y \
             ghostscript \
             gsfonts \
-            texlive-plain-generic \
             texlive-pstricks
 
         echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
@@ -85,10 +84,11 @@ jobs:
         sudo mktexlsr
         sudo updmap-sys
         sudo fc-cache -fv
+    - name: Debug font maps
+      run: |
+        kpsewhich psfonts.map
     - name: Compile the document
       run: |
-        export OSFONTDIR=/usr/share/fonts
-        export TEXFONTMAPS=/var/lib/texmf/fonts/map
         python compile.py
         # assert there exists one pdf file in build folder
         ls build/*.pdf | wc -l | grep -q 1
