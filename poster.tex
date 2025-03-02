@@ -1,0 +1,244 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NIWeek 2014 Poster by T. Reveyrand
+% www.microwave.fr
+% http://www.microwave.fr/LaTeX.html
+% ---------------------------------------
+%
+% Original template created by:
+% Brian Amberg (baposter@brian-amberg.de)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[a0paper,portrait]{baposter}
+
+\input{preamble}
+
+\usepackage{textcomp}
+
+\usepackage{hyperref}
+
+\graphicspath{{images/}} % Directory in which figures are stored
+
+ \definecolor{bordercol}{RGB}{40,40,40} % Border color of content boxes
+ \definecolor{headercol1}{RGB}{186,215,230} % Background color for the header in the content boxes (left side)
+ \definecolor{headercol2}{RGB}{120,120,120} % Background color for the header in the content boxes (right side)
+ \definecolor{headerfontcol}{RGB}{0,0,0} % Text color for the header text in the content boxes
+ \definecolor{boxcolor}{RGB}{210,235,250} % Background color for the content in the content boxes
+
+\definecolor{jdhblue}{RGB}{2,93,186}
+
+\definecolor{zkblue}{RGB}{88,135,175}
+\definecolor{zkbackground}{RGB}{230,232,234}
+
+
+% \usetikzlibrary{shapes, arrows, external, decorations.pathmorphing, backgrounds, positioning, fit, petri, calc, hobby, cd}
+
+
+\begin{document}
+
+% \background{ % Set the background to an image (background.pdf)
+% \begin{tikzpicture}[remember picture,overlay]
+% \draw (current page.north west)+(-2em,2em) node[anchor=north west]
+% {\includegraphics[height=1.1\textheight]{images/baposter_background.pdf}};
+% \end{tikzpicture}
+% }
+
+\begin{poster}{
+grid=false,
+borderColor=bordercol, % Border color of content boxes
+headerColorOne=headercol1, % Background color for the header in the content boxes (left side)
+headerColorTwo=headercol2, % Background color for the header in the content boxes (right side)
+headerFontColor=headerfontcol, % Text color for the header text in the content boxes
+% boxColorOne=boxcolor, % Background color for the content in the content boxes
+boxColorOne=zkbackground,
+headershape=roundedright, % Specify the rounded corner in the content box headers
+headerfont=\Large\sf\bf, % Font modifiers for the text in the content box headers
+textborder=rectangle,
+% background=user,
+background=none,
+headerborder=open, % Change to closed for a line under the content box headers
+boxshade=plain
+}
+%
+%----------------------------------------------------------------------------------------
+%	TITLE AND AUTHOR NAME
+%----------------------------------------------------------------------------------------
+%
+{\includegraphics[scale=0.401]{images/logo_cau_science.png}} % University/lab logo
+{
+{\bf \fontsize{19pt}{19pt} \selectfont To write}
+} % Poster title
+{\vspace{0.3em} \smaller Hao WEN$^1$, Jingsu KANG$^2$  \\  % Author names
+
+$^1${\it College of Science, China Agricultural University}\qquad
+$^2${\it Tianjin Medical University} \\
+\vspace{0.2cm}
+{\Large \bf{The George B. Moody PhysioNet Challenge 2025}, ~~~\bf{Team Revenger}}
+}
+{\includegraphics[scale=0.101]{logo_tmu.jpeg}}
+
+
+\newif\ifcoloredtext
+\coloredtexttrue
+\newif\ifboxednn
+\boxednntrue
+
+
+%----------------------------------------------------------------------------------------
+%	INTRODUCTION
+%----------------------------------------------------------------------------------------
+
+\headerbox{Introduction}{name=introduction, column=0, row=0, span=3}{
+% finished
+
+\begin{itemize}
+\item to write
+\vspace{-0.2cm}
+\item to write
+\vspace{-0.2cm}
+\item to write
+\end{itemize}
+}
+
+%----------------------------------------------------------------------------------------
+%	Framework
+%----------------------------------------------------------------------------------------
+
+\headerbox{The Multi-Stage Framework}{name=framework, column=0, span=3, row=1, below=introduction}{
+% finished
+
+\newif\ifFrameworkFigBox
+\FrameworkFigBoxfalse
+
+\begin{center}
+\input{tikz_plots/multi-stage-framework}
+\end{center}
+
+}
+
+%----------------------------------------------------------------------------------------
+%	Preprocessing
+%----------------------------------------------------------------------------------------
+
+\headerbox{Training Data Preparation}{name=data, column=0, row=1, span=2, below=framework}{
+% finished
+
+\begin{itemize}
+\item ECG-Image-Kit to generate ECG images from the PTB-XL dataset for our method development. Additionally, the PTB-XL+ dataset was used to generate classification labels.
+\vspace{-0.2cm}
+\item Image generation setup included augmentations such as random Gaussian noise, random color temperature adjustments, and distortions including handwritten notes, wrinkles, and creases.
+\vspace{-0.2cm}
+\item Bounding boxes for the printed waveforms and lead names, along with the plotted pixel coordinates of the waveforms, were recorded in metadata files alongside the generated images to train object detection models and segmentation models respectively.
+\end{itemize}
+
+}
+
+
+%----------------------------------------------------------------------------------------
+%	Model selection
+%----------------------------------------------------------------------------------------
+
+\headerbox{Model Selection}{name=nn, column=2, span=1, row = 2, below=framework}{
+% NOT finished
+
+\input{tables/model_select_poster}
+
+Models are chosen based on performance, efficiency, and compatibility with ECG image data.
+\newline
+\faHandPointRight[regular] DETR: 0.9 mAP \hfill \faHandPointRight[regular] U-Net: 0.73 Dice.
+\newline
+\faHandPointRight[regular] Total inference time: 2s on single RTX 3090
+
+}
+
+%----------------------------------------------------------------------------------------
+%	Novel loss functions
+%----------------------------------------------------------------------------------------
+
+\headerbox{Loss Functions}{name=loss, span=2, column=0, below=data}{
+% finished
+
+\begin{tikzpicture}
+\ImageNode[]{wtmask}{width=0.4\linewidth}{images/weight-mask.pdf}
+\node [rectangle, text width = 8.8cm, inner sep = 2pt, minimum height = 1.0em, right=0.3cm of wtmask.north east, anchor=north west] {\faHandPointRight[regular] Segmentation: Since ECG waveforms occupy only a small portion of the image, we used the BCE loss multiplied by a \textbf{\color{red} weight mask} to balance the loss contribution from different parts of the ECG waveforms. The weight mask is the sum of multiple dilations (e.g., dilation iterations 2, 4, 6, and 8) of the binarized ground truth mask. On the left is an example of a weight mask.};
+\end{tikzpicture}
+\faHandPointRight[regular] Classification: Asymmetric loss $L = -y \cdot (1-p)^{\gamma_{+}} \log(p) - (1-y) \cdot (p_m)^{\gamma_{-}} \log(1-p_m)$
+\newline
+\faHandPointRight[regular] Object detection: 1 $\times$ bbox class cross-entropy + 5 $\times$ bbox coordinate L1 loss + 2 $\times$ GIoU loss
+
+}
+
+%----------------------------------------------------------------------------------------
+%	Submission Results
+%----------------------------------------------------------------------------------------
+
+\headerbox{Submission Results}{name=submission, span=1, column=2, below=nn}{
+% NOT finished
+
+\begin{center}
+\input{tables/final_results_simple}
+\end{center}
+The rankings are based on the hidden validation set. Results on the public training data (more specifically, the left-out validation set) are also provided for reference.
+
+}
+
+%----------------------------------------------------------------------------------------
+%	Limitations, Discussions
+%----------------------------------------------------------------------------------------
+
+\headerbox{Discussions and Limitations}{name=discussion, column=0, below=loss, span=3}{
+% NOT finished
+
+\begin{itemize}
+\item The proposed method is relatively effective in digitizing and classifying ECG images concurrently, achieving an acceptable SNR and F1 score. This multi-stage framework offers a lightweight and efficient solution to this challenge.
+\vspace{-0.2cm}
+\item There are observable gaps between the SNR metric on the public training data and the hidden validation/test data. A possible reason for this discrepancy is the difference in data distribution (format): training data generated using ECG-Image-Kit all follow the standard 3-by-4 format. The post-processing step after segmentation is designed to handle this specific format. However, the hidden validation/test data may have different formats, e.g. additional full-length waveforms.
+\vspace{-0.2cm}
+\item Further improvement directions:
+\vspace{-0.2cm}
+\begin{itemize}
+    \item More effective backbone networks or more advanced architectures, including the latest YOLO series models.
+    \vspace{-0.1cm}
+    \item End-to-end digitization models from the segmented ECG waveform masks or even directly from the ROI can be developed to simplify the pipeline, replacing the current rule-based conversion from pixel coordinates to digitized value.
+    \vspace{-0.1cm}
+    \item Better handling of rotated ECG images to improve the framework's robustness, using oriented object detection models.
+\end{itemize}
+\end{itemize}
+
+}
+
+
+%----------------------------------------------------------------------------------------
+%	ACKNOWLEDGEMENTS
+%----------------------------------------------------------------------------------------
+
+\headerbox{Acknowledgements}{name=acknowledgements, column=0, below=discussion, span=3}{
+% finished
+% \smaller
+We thank professor {\bf Deren Han} from the School of Mathematical Sciences, Beihang University for providing GPU servers to help accomplish this work.
+
+}
+
+%----------------------------------------------------------------------------------------
+%	link to the GitHub repository
+%----------------------------------------------------------------------------------------
+
+\headerbox{}{name=foottext, column=0, span=3, below=acknowledgements, textborder=none, headerborder=none,  boxheaderheight=0pt}{
+% finished
+\hfill \small \textit{Code, configs, etc. are available at https://github.com/wenh06/cinc2025, and is based on https://github.com/DeepPSP/torch\_ecg.}
+}
+
+
+\end{poster}
+
+\end{document}
