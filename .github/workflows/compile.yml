@@ -269,8 +269,6 @@ jobs:
 
         sudo mktexlsr
         sudo updmap-sys
-        sudo updmap-sys --enable Map=pdftex.map
-        sudo updmap-sys --enable Map=psnfss.map
         sudo fc-cache -fv
     - name: Debug font maps
       run: |
