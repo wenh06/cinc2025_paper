@@ -269,10 +269,15 @@ jobs:
 
         sudo mktexlsr
         sudo updmap-sys
+        sudo updmap-sys --enable Map=pdftex.map
+        sudo updmap-sys --enable Map=psnfss.map
         sudo fc-cache -fv
     - name: Debug font maps
       run: |
-        kpsewhich psfonts.map
+        echo "Checking font maps..."
+        kpsewhich psfonts.map || echo "psfonts.map not found"
+        kpsewhich pdftex.map || echo "pdftex.map not found"
+        kpsewhich phvb7t.tfm || echo "Font metric phvb7t.tfm not found"
     - name: Compile the document
       run: |
         python compile.py
