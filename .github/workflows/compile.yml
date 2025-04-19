@@ -250,9 +250,6 @@ jobs:
           dvips
           urw
           adobemapping
-          hvmath-fonts
-          tmmath-fonts
-          psnfssx-8r
     - name: Install latexmk and extra software
       run: |
         sudo apt install -y latexmk \
