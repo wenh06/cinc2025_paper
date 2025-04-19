@@ -248,7 +248,6 @@ jobs:
           lm
           wrapfig
           dvips
-          urw
           adobemapping
     - name: Install latexmk and extra software
       run: |
