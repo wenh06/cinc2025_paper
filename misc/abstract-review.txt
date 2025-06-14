@@ -1,0 +1,37 @@
+============================================================================ 
+CinC 2025 Reviews for Submission #309
+============================================================================ 
+
+Title: Hierarchical Learning for Chagas Detection from ECG under Expert-Label Scarcity
+Authors: Hao WEN and Jingsu Kang
+
+
+============================================================================
+                            REVIEWER #1
+============================================================================
+
+Author Comments
+---------------------------------------------------------------------------
+This is a well written abstract with a clear focus on how to handle class imbalance and label expertise from the source datasets. There are one or two minor formatting issues (ex: first set of quotation marks surrounding team name are actually back ticks)
+---------------------------------------------------------------------------
+
+
+
+============================================================================
+                            REVIEWER #2
+============================================================================
+
+Author Comments
+---------------------------------------------------------------------------
+How do teh authors plan to use the spatial information encoded in the 12-lead signals?
+---------------------------------------------------------------------------
+
+
+
+============================================================================
+                            REVIEWER #3
+============================================================================
+
+Author Comments
+---------------------------------------------------------------------------
+The presented method is creative.  While a demographic feature-based stratified split was conducted for model evaluation, cross-validated results were not reported.
