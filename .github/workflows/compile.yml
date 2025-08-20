@@ -250,6 +250,14 @@ jobs:
           wrapfig
           dvips
           adobemapping
+          helvetic
+    - name: Verify helvetic
+      run: |
+        echo "[Before compile] Check helvetic"
+        tlmgr info helvetic
+        echo "-- locate phvb7t.tfm (should NOT be empty)"
+        tlmgr search --file --global phvb7t.tfm || true
+        kpsewhich phvb7t.tfm || (echo "phvb7t.tfm still missing" && exit 1)
     - name: Install latexmk and extra software
       run: |
         sudo apt install -y latexmk \
@@ -273,6 +281,8 @@ jobs:
     - name: Debug font maps
       run: |
         echo "Checking font maps..."
+        tlmgr search --file --global phvb7t.tfm || echo "Font metric phvb7t.tfm not found"
+        tlmgr info helvetic || echo "Font helvetic not found"
         kpsewhich psfonts.map || echo "psfonts.map not found"
         kpsewhich pdftex.map || echo "pdftex.map not found"
         kpsewhich phvb7t.tfm || echo "Font metric phvb7t.tfm not found"
