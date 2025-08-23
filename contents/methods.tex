@@ -3,7 +3,64 @@
 
 % NOT finished
 
-to write
+\subsection{Dataset Preparation}
+\label{subsec:data}
+
+% almost finished
+
+We used three ECG datasets for model training, with substantial differences in sample size, Chagas prevalence, and label provenance as summarized in Table~\ref{tab:dataset_stats}.
+
+\begin{table}[!htp]
+\centering
+\begin{tabular}{rlll}
+\toprule
+Dataset & \multicolumn{1}{c}{Size} & \multicolumn{1}{c}{Chagas rate} & Label provenance \\
+\midrule
+SaMi-Trop & 1\,631   & 100 & expert-confirmed \\
+CODE-15\% & 345\,779 & 1.795   & self-reported \\
+PTB-XL    & 21\,799  & 0   & N/A \\
+\bottomrule
+\end{tabular}
+\caption{Dataset statistics and label provenance. Chagas rate is the proportion of recordings labeled positive in each dataset. N/A indicates that confirmed Chagas cases are not expected (non-endemic population).}
+\label{tab:dataset_stats}
+\end{table}
+
+All ECGs were uniformly resampled to 400 Hz, bandpass filtered (0.5–45 Hz), and z-score normalized to zero mean and unit variance computed as in Eq.~\ref{eq:z_score}:
+\begin{equation}
+\label{eq:z_score}
+\tilde{\mathbf{x}} = \frac{\mathbf{x} - \boldsymbol{\mu}_x}{\boldsymbol{\sigma}_x}
+\end{equation}
+where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_x$ and $\boldsymbol{\sigma}_x$ are the mean and standard deviation of $\mathbf{x}$, respectively.
+
+To address label reliability, we applied stratified label smoothing \cite{inceptionv2v3}: expert-confirmed positives (SaMi-Trop) use hard labels (smoothing factor $0.0$), self-reported positives (CODE-15\%) use moderate smoothing ($0.6$), and negatives use higher smoothing ($0.2$). This reflects greater trust in expert-confirmed labels and accounts for possible noise in other groups. Label smoothing is computed according to Eq.~\ref{eq:label_smoothing}:
+\begin{equation}
+\label{eq:label_smoothing}
+\tilde{\mathbf{y}} = (1 - \varepsilon) \cdot \mathbf{y} + \frac{\varepsilon}{K} \cdot \mathbf{1},
+\end{equation}
+where $\mathbf{y}$ is the one-hot ground-truth label ($[0, 1]$ for positives, $[1, 0]$ for negatives), $\varepsilon$ is the smoothing factor, and $\tilde{\mathbf{y}}$ is the smoothed label. It should be noted that the smoothing factor $\varepsilon$ varies across samples from different sources.
+
+Severe class imbalance was mitigated by upsampling positives during training: positive samples from CODE-15\% were upsampled by a factor of 3, and those from SaMi-Trop by 7. No upsampling was applied to PTB-XL, which contains no positives. Smoothed labels and upsampling strategies for each dataset are summarized in Table~\ref{tab:augmentation}.
+
+\begin{table}[!htp]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\multirow{2}{*}{Dataset} & Upsampling & \multicolumn{2}{c}{Smoothed labels} \\ \cmidrule(lr){3-4}
+& factor & negative & positive \\
+\midrule
+SaMi-Trop & $7$ & N/A           & $[0,\,1]$     \\
+CODE-15\%   & $3$ & $[0.7,\,0.3]$ & $[0.3,\,0.7]$ \\
+PTB-XL    & $1$ & $[0.9,\,0.1]$ & N/A           \\
+\bottomrule
+\end{tabular}
+\caption{Smoothed labels and upsampling strategies for each dataset. Smoothed labels are computed from Eq.~\ref{eq:label_smoothing}.}
+\label{tab:augmentation}
+\end{table}
+
+
+\subsection{xxx}
+
+% NOT finished
 
 
 \cite{torch_ecg_paper}
