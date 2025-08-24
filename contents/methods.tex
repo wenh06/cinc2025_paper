@@ -1,14 +1,14 @@
 \section{Methods}
 \label{sec:methods}
 
-% NOT finished
+% almost finished
 
-\subsection{Dataset Preparation}
+\subsection{Datasets and Preprocessing}
 \label{subsec:data}
 
 % almost finished
 
-We used three ECG datasets for model training, with substantial differences in sample size, Chagas prevalence, and label provenance as summarized in Table~\ref{tab:dataset_stats}.
+We used three ECG datasets for model training, with substantial differences in sample size, chagas prevalence, and label provenance as summarized in Table~\ref{tab:dataset_stats}.
 
 \begin{table}[!htp]
 \centering
@@ -30,14 +30,19 @@ All ECGs were uniformly resampled to 400 Hz, bandpass filtered (0.5–45 Hz), an
 \label{eq:z_score}
 \tilde{\mathbf{x}} = \frac{\mathbf{x} - \boldsymbol{\mu}_x}{\boldsymbol{\sigma}_x}
 \end{equation}
-where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_x$ and $\boldsymbol{\sigma}_x$ are the mean and standard deviation of $\mathbf{x}$, respectively.
+where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_x$ and $\boldsymbol{\sigma}_x$ are the mean and standard deviation of $\mathbf{x}$, respectively. We excluded ECGs shorter than 1,200 samples to ensure inputs contain enough cardiac cycles for stable model analysis.
 
-To address label reliability, we applied stratified label smoothing \cite{inceptionv2v3}: expert-confirmed positives (SaMi-Trop) use hard labels (smoothing factor $0.0$), self-reported positives (CODE-15\%) use moderate smoothing ($0.6$), and negatives use higher smoothing ($0.2$). This reflects greater trust in expert-confirmed labels and accounts for possible noise in other groups. Label smoothing is computed according to Eq.~\ref{eq:label_smoothing}:
+\subsection{Reliability-Aware Hierarchical Supervision}
+\label{subsec:reliability}
+
+% almost finished
+
+We introduce a hierarchical supervision scheme that encodes source reliability through stratified label smoothing and adaptive upsampling. Three reliability levels are defined: (1) expert-confirmed positives (SaMi-Trop, maximal trust), (2) self-reported samples (CODE-15\%, both positives and negatives, higher uncertainty), and (3) non-endemic negatives (PTB-XL, very low true prevalence but still mildly regularized). Given a one-hot label $\mathbf{y}$ ($[0, 1]$ for positives, $[1, 0]$ for negatives) and number of classes $C = 2,$ the smoothed target is computed as in Eq.~\ref{eq:label_smoothing}:
 \begin{equation}
 \label{eq:label_smoothing}
-\tilde{\mathbf{y}} = (1 - \varepsilon) \cdot \mathbf{y} + \frac{\varepsilon}{K} \cdot \mathbf{1},
+\tilde{\mathbf{y}} = (1 - \varepsilon) \cdot \mathbf{y} + \frac{\varepsilon}{C} \cdot \mathbf{1},
 \end{equation}
-where $\mathbf{y}$ is the one-hot ground-truth label ($[0, 1]$ for positives, $[1, 0]$ for negatives), $\varepsilon$ is the smoothing factor, and $\tilde{\mathbf{y}}$ is the smoothed label. It should be noted that the smoothing factor $\varepsilon$ varies across samples from different sources.
+where $\varepsilon$ is the smoothing factor which depends on the reliability level: 0.0 (SaMi positives), 0.6 (CODE-15\% positives \& negatives), 0.2 (PTB-XL negatives). This attenuates overconfident gradients for noisier or potentially misreported labels while preserving sharp supervision on expert-confirmed cases.
 
 Severe class imbalance was mitigated by upsampling positives during training: positive samples from CODE-15\% were upsampled by a factor of 3, and those from SaMi-Trop by 7. No upsampling was applied to PTB-XL, which contains no positives. Smoothed labels and upsampling strategies for each dataset are summarized in Table~\ref{tab:augmentation}.
 
@@ -49,18 +54,52 @@ Severe class imbalance was mitigated by upsampling positives during training: po
 & factor & negative & positive \\
 \midrule
 SaMi-Trop & $7$ & N/A           & $[0,\,1]$     \\
-CODE-15\%   & $3$ & $[0.7,\,0.3]$ & $[0.3,\,0.7]$ \\
+CODE-15\% & $3$ & $[0.7,\,0.3]$ & $[0.3,\,0.7]$ \\
 PTB-XL    & $1$ & $[0.9,\,0.1]$ & N/A           \\
 \bottomrule
 \end{tabular}
-\caption{Smoothed labels and upsampling strategies for each dataset. Smoothed labels are computed from Eq.~\ref{eq:label_smoothing}.}
+\caption{Smoothed labels (computed from Eq.~\ref{eq:label_smoothing}) and upsampling strategies for each dataset.}
 \label{tab:augmentation}
 \end{table}
 
 
-\subsection{xxx}
+\subsection{Model Architecture}
+\label{subsec:model}
 
-% NOT finished
+% almost finished
+
+We build upon the 1D ResNet ECG classifier of Ribeiro et al.~\cite{ribeiro2020automatic} and introduce three modifications.
+
+\textbf{(1) Bottleneck residual blocks.} We replace basic ResNet blocks with bottleneck blocks of the form $1$–$15$–$1$ (pointwise--temporal--pointwise). The middle temporal convolution (kernel size 15) applies stride 4 for downsampling; the two 1$\times$1 convolutions first reduce then expand channels with an expansion factor of 4. A projection 1$\times$1 convolution (stride 4) is used in the residual branch whenever temporal resolution or channel width changes. Across the four blocks, the reduced (bottleneck) channel widths are $128 \to 192 \to 256 \to 320$,yielding expanded output widths $512 \to 768 \to 1024 \to 1280$.
+
+\textbf{(2) Global squeeze-and-excitation (SE).} After the final bottleneck block, a single global SE module (reduction ratio 8) \cite{hu2018senet} performs temporal average pooling to a channel descriptor, applies a two-layer bottleneck multi-layer perceptron (MLP) $1280 \to 160 \to 1280$ with ReLU and sigmoid gating, and rescales the feature map channel-wise.
+
+\textbf{(3) Global pooling head for variable input length.} Instead of flattening a fixed-length feature map as in the original baseline, we apply global max pooling over the remaining temporal dimension, yielding a 1280-dimensional vector irrespective of input length $L$. This vector is fed to a lightweight two-layer classification MLP: a hidden fully connected layer ($1280 \to 1024$) with non-linear activation and dropout (rate 0.2), followed by a final linear layer ($1024 \to 2$) producing class logits.
+
+\textbf{Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
+
+Overall, the changes primarily enable variable-length inference and add global channel reweighting with minimal structural overhead. The resulting model architecture is illustrated in Fig.~\ref{fig:model}.
+
+\begin{figure*}
+\centering
+\input{tikz_plots/resnet_nature_comm_bottle_neck}
+\caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size (ks) 15, 64 channels (Ch), Batch Normalization (BN), ReLU) followed by four bottleneck residual blocks, a global squeeze-and-excitation (SE) module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded (post-bottleneck) channels.
+Right: internal bottleneck structure (1--15--1 pointwise--temporal--pointwise). The middle 15-length convolution uses stride 4 for temporal downsampling; 1$\times$1 convolutions reduce then expand channels, and a projection 1$\times$1 (stride 4) aligns resolution and width for the residual path. For clarity, dropout layers present in the implementation are omitted. Abbreviations: ks kernel size; Ch channels; BN Batch Normalization; SE squeeze-and-excitation; MLP multi-layer perceptron.}
+\label{fig:model}
+\end{figure*}
 
 
-\cite{torch_ecg_paper}
+\subsection{Training and Implementation Setup}
+\label{subsec:train}
+
+% almost finished
+
+We employed an asymmetric loss (ASL) \cite{ridnik2021asymmetric_loss} to further complement the reliability-aware label smoothing strategy, jointly addressing the challenges of severe class imbalance. Let $z$ denote the logits and $p=\sigma(z)$ the predicted probability of the Chagas-positive class, the ASL is defined in Eq.~\ref{eq:asl} with separate focusing parameters for positives and negatives and a clipped negative probability:
+\begin{equation}
+\label{eq:asl}
+\begin{multlined}
+L = -y \cdot (1-p)^{\gamma_{+}} \log(p) \\
+\phantom{L = } - (1-y) \cdot (p_m)^{\gamma_{-}} \log(1-p_m),
+\end{multlined}
+\end{equation}
+where $p_m = \max(p - m, 0),$ $(\gamma_{+},\gamma_{-})=(1,4)$ and margin $\delta=0.05$. We train for 30 epochs with batch size 128 using AdamW (AMSGrad, initial learning rate $1\times10^{-4}$, peak $6\times10^{-4}$ under a One-Cycle schedule, weight decay $1\times10^{-2}$). Early stopping (patience 10 epochs, monitored on a fixed 20\% internal hold-out subset) selects the final model via the Challenge metric. Each training segment is a uniform random crop (or center trim if shorter) of length 4,096 samples. All components (data pipeline, optimization utilities) are implemented using the \texttt{torch-ECG} framework \cite{torch_ecg_paper}.
