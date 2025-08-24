@@ -79,7 +79,7 @@
 \node[bnact, below=5mm of c3] (bn3) {BN};
 
 \node[sum, below=5mm of bn3] (add) {+};
-\node[act, below=5mm of add] (outact) {ReLU (output)};
+\node[act, below=5mm of add] (outact) {ReLU};
 
 % Projection/skip branch (since stride=4 or channel change)
 \node[layer, right=10mm of c2, yshift=-7mm, minimum width=18mm] (proj) {Proj 1$\times$1 \\ (stride 4)};

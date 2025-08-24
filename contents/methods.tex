@@ -32,6 +32,16 @@ All ECGs were uniformly resampled to 400 Hz, bandpass filtered (0.5–45 Hz), an
 \end{equation}
 where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_x$ and $\boldsymbol{\sigma}_x$ are the mean and standard deviation of $\mathbf{x}$, respectively. We excluded ECGs shorter than 1,200 samples to ensure inputs contain enough cardiac cycles for stable model analysis.
 
+
+\begin{figure*}[!t]
+\centering
+\input{tikz_plots/resnet_nature_comm_bottle_neck}
+\caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size (ks) 15, 64 channels (Ch), Batch Normalization (BN), ReLU) followed by four bottleneck residual blocks, a global squeeze-and-excitation (SE) module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded (post-bottleneck) channels.
+Right: internal bottleneck structure (1--15--1 pointwise--temporal--pointwise). The middle 15-length convolution uses stride 4 for temporal downsampling; 1$\times$1 convolutions reduce then expand channels, and a projection 1$\times$1 (stride 4) aligns resolution and width for the residual path. For clarity, dropout layers present in the implementation are omitted. Abbreviations: ks kernel size; Ch channels; BN Batch Normalization; SE squeeze-and-excitation; MLP multi-layer perceptron.}
+\label{fig:model}
+\end{figure*}
+
+
 \subsection{Reliability-Aware Hierarchical Supervision}
 \label{subsec:reliability}
 
@@ -45,6 +55,7 @@ We introduce a hierarchical supervision scheme that encodes source reliability t
 where $\varepsilon$ is the smoothing factor which depends on the reliability level: 0.0 (SaMi positives), 0.6 (CODE-15\% positives \& negatives), 0.2 (PTB-XL negatives). This attenuates overconfident gradients for noisier or potentially misreported labels while preserving sharp supervision on expert-confirmed cases.
 
 Severe class imbalance was mitigated by upsampling positives during training: positive samples from CODE-15\% were upsampled by a factor of 3, and those from SaMi-Trop by 7. No upsampling was applied to PTB-XL, which contains no positives. Smoothed labels and upsampling strategies for each dataset are summarized in Table~\ref{tab:augmentation}.
+
 
 \begin{table}[!htp]
 \centering
@@ -79,14 +90,6 @@ We build upon the 1D ResNet ECG classifier of Ribeiro et al.~\cite{ribeiro2020au
 \textbf{Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
 
 Overall, the changes primarily enable variable-length inference and add global channel reweighting with minimal structural overhead. The resulting model architecture is illustrated in Fig.~\ref{fig:model}.
-
-\begin{figure*}
-\centering
-\input{tikz_plots/resnet_nature_comm_bottle_neck}
-\caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size (ks) 15, 64 channels (Ch), Batch Normalization (BN), ReLU) followed by four bottleneck residual blocks, a global squeeze-and-excitation (SE) module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded (post-bottleneck) channels.
-Right: internal bottleneck structure (1--15--1 pointwise--temporal--pointwise). The middle 15-length convolution uses stride 4 for temporal downsampling; 1$\times$1 convolutions reduce then expand channels, and a projection 1$\times$1 (stride 4) aligns resolution and width for the residual path. For clarity, dropout layers present in the implementation are omitted. Abbreviations: ks kernel size; Ch channels; BN Batch Normalization; SE squeeze-and-excitation; MLP multi-layer perceptron.}
-\label{fig:model}
-\end{figure*}
 
 
 \subsection{Training and Implementation Setup}
