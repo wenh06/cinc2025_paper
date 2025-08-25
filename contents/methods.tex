@@ -8,7 +8,7 @@
 
 % almost finished
 
-We used three ECG datasets for model training, with substantial differences in sample size, chagas prevalence, and label provenance as summarized in Table~\ref{tab:dataset_stats}.
+We used three ECG datasets for model training, with substantial differences in sample size, Chagas prevalence, and label provenance as summarized in Table~\ref{tab:dataset_stats}.
 
 \begin{table}[!htp]
 \centering
@@ -54,7 +54,32 @@ We introduce a hierarchical supervision scheme that encodes source reliability t
 \end{equation}
 where $\varepsilon$ is the smoothing factor which depends on the reliability level: 0.0 (SaMi positives), 0.6 (CODE-15\% positives \& negatives), 0.2 (PTB-XL negatives). This attenuates overconfident gradients for noisier or potentially misreported labels while preserving sharp supervision on expert-confirmed cases.
 
-Severe class imbalance was mitigated by upsampling positives during training: positive samples from CODE-15\% were upsampled by a factor of 3, and those from SaMi-Trop by 7. No upsampling was applied to PTB-XL, which contains no positives. Smoothed labels and upsampling strategies for each dataset are summarized in Table~\ref{tab:augmentation}.
+Severe class imbalance was mitigated by upsampling positives during training: positive samples from CODE-15\% were upsampled by a factor of 3, and those from SaMi-Trop by 12. No upsampling was applied to PTB-XL, which contains no positives. We chose these factors after reviewing hidden validation scores from multiple submissions, as shown in Table~\ref{tab:upsampling_schemes}.
+
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{ccc}
+\toprule
+\multicolumn{2}{c}{Upsample factor} & \multirow{2}{*}{Challenge score} \\
+\cmidrule(lr){1-2}
+CODE-15\% &  SaMi-Trop & \\
+\midrule
+- & -     & 0.239$^*$ \\
+3 & 7      & 0.212 \\
+3 & 12    & \textbf{0.245} \\
+10 & 120   & 0.210 \\
+6 & 36     & 0.221 \\
+\bottomrule
+\end{tabular}
+\caption{Representative upsampling schemes and corresponding Challenge scores on the hidden validation set. The model and training strategies used were the same. “-” indicates no upsampling.\\
+$^*$: obtained during the unofficial phase.
+}
+\label{tab:upsampling_schemes}
+\end{table}
+
+
+Smoothed labels and upsampling strategies for each dataset are summarized in Table~\ref{tab:augmentation}.
 
 
 \begin{table}[!htp]
@@ -64,7 +89,7 @@ Severe class imbalance was mitigated by upsampling positives during training: po
 \multirow{2}{*}{Dataset} & Upsampling & \multicolumn{2}{c}{Smoothed labels} \\ \cmidrule(lr){3-4}
 & factor & negative & positive \\
 \midrule
-SaMi-Trop & $7$ & N/A           & $[0,\,1]$     \\
+SaMi-Trop & $12$ & N/A           & $[0,\,1]$     \\
 CODE-15\% & $3$ & $[0.7,\,0.3]$ & $[0.3,\,0.7]$ \\
 PTB-XL    & $1$ & $[0.9,\,0.1]$ & N/A           \\
 \bottomrule
@@ -81,7 +106,7 @@ PTB-XL    & $1$ & $[0.9,\,0.1]$ & N/A           \\
 
 We build upon the 1D ResNet ECG classifier of Ribeiro et al.~\cite{ribeiro2020automatic} and introduce three modifications.
 
-\textbf{(1) Bottleneck residual blocks.} We replace basic ResNet blocks with bottleneck blocks of the form $1$–$15$–$1$ (pointwise--temporal--pointwise). The middle temporal convolution (kernel size 15) applies stride 4 for downsampling; the two 1$\times$1 convolutions first reduce then expand channels with an expansion factor of 4. A projection 1$\times$1 convolution (stride 4) is used in the residual branch whenever temporal resolution or channel width changes. Across the four blocks, the reduced (bottleneck) channel widths are $128 \to 192 \to 256 \to 320$,yielding expanded output widths $512 \to 768 \to 1024 \to 1280$.
+\textbf{(1) Bottleneck residual blocks.} We replace basic ResNet blocks with bottleneck blocks of the form $1$–$15$–$1$ (pointwise--temporal--pointwise). The middle temporal convolution (kernel size 15) applies stride 4 for downsampling; the two 1$\times$1 convolutions first reduce then expand channels with an expansion factor of 4. A projection 1$\times$1 convolution (stride 4) is used in the residual branch whenever temporal resolution or channel width changes. Across the four blocks, the reduced (bottleneck) channel widths are $128 \to 192 \to 256 \to 320$, yielding expanded output widths $512 \to 768 \to 1024 \to 1280$.
 
 \textbf{(2) Global squeeze-and-excitation (SE).} After the final bottleneck block, a single global SE module (reduction ratio 8) \cite{hu2018senet} performs temporal average pooling to a channel descriptor, applies a two-layer bottleneck multi-layer perceptron (MLP) $1280 \to 160 \to 1280$ with ReLU and sigmoid gating, and rescales the feature map channel-wise.
 
@@ -92,7 +117,7 @@ We build upon the 1D ResNet ECG classifier of Ribeiro et al.~\cite{ribeiro2020au
 Overall, the changes primarily enable variable-length inference and add global channel reweighting with minimal structural overhead. The resulting model architecture is illustrated in Fig.~\ref{fig:model}.
 
 
-\subsection{Training and Implementation Setup}
+\subsection{Training and Implementation Setups}
 \label{subsec:train}
 
 % almost finished
