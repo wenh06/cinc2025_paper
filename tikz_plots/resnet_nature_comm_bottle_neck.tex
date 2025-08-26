@@ -4,29 +4,29 @@
     >={Latex[length=3mm]},
     node distance=6.4mm,
     every node/.style={inner sep=2pt},
-    stem/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=10mm,
+    stem/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
                  align=center, fill=blue!10},
     block/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=12mm,
                   align=center, fill=orange!12},
-    se/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=10mm,
+    se/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
                align=center, fill=green!12},
-    pool/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=10mm,
+    pool/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
                  align=center, fill=cyan!10},
-    head/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=10mm,
+    head/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
                  align=center, fill=purple!10},
-    output/.style={draw, rounded corners=2pt, minimum width=24mm, minimum height=10mm,
+    output/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
                 align=center, fill=red!10},
     arrow/.style={-{Latex[length=3mm]}, thick},
     darr/.style={-{Latex[length=2.4mm]}, thick},
     dashedarrow/.style={-{Latex[length=2.6mm]}, thick, dashed},
     ann/.style={inner sep=1pt, align=center},
-    layer/.style={draw, rounded corners=2pt, minimum width=18mm, minimum height=6.2mm,
+    layer/.style={draw, rounded corners=2pt, minimum width=19mm, minimum height=6.2mm,
                   align=center, fill=blue!6},
-    bnact/.style={draw, rounded corners=2pt, minimum width=18mm, minimum height=6.2mm,
+    bnact/.style={draw, rounded corners=2pt, minimum width=19mm, minimum height=6.2mm,
                   align=center, fill=violet!10},
-    act/.style={draw, rounded corners=2pt, minimum width=18mm, minimum height=6.2mm,
+    act/.style={draw, rounded corners=2pt, minimum width=19mm, minimum height=6.2mm,
                   align=center, fill=red!10},
-    drop/.style={draw, rounded corners=2pt, minimum width=18mm, minimum height=6.2mm,
+    drop/.style={draw, rounded corners=2pt, minimum width=19mm, minimum height=6.2mm,
                   align=center, fill=gray!15, dashed},
     sum/.style={draw, circle, inner sep=1.6pt, fill=white},
     % brace/.style={decorate, decoration={brace, amplitude=6pt}},
@@ -38,7 +38,17 @@
 \node[stem, below=of input] (stem) {Stem \\ Conv ks=15 \\ BN + ReLU \\ 64 Ch};
 
 % Compressed single bottleneck block (represents 4 stacked blocks)
-\node[block, below=of stem] (bottleneck) {$4 \times$ Bottleneck Block \\ ks: 1--15--1 (stride=4) \\ Ch: $512 \to 768 \to 1024 \to 1280$};
+% \node[block, below=of stem] (bottleneck) {$4 \times$ Bottleneck Block \\ ks: 1--15--1, stride: 1--4--1 \\ Ch: $512 \to 768 \to 1024 \to 1280$};
+
+\node[block, below=of stem, minimum height=0pt] (bottleneck) {%
+\begin{tikzpicture}[baseline=(ch.base), node distance=1mm]
+\node[inner sep=2pt] (core)
+{Bottleneck Block \\ ks: 1--15--1, stride: 1--4--1};
+\draw[rounded corners=1pt] (core.north west) rectangle (core.south east);
+\node[minimum width=2mm, left=of core] {\larger[3] $\mathbf{4\times}$};
+\node[below left=1mm and -20mm of core.south, inner sep=2pt] (ch) {Ch: $512 \to 768 \to 1024 \to 1280$};
+\end{tikzpicture}
+};
 
 % Global SE
 \node[se, below=of bottleneck] (gse) {Global SE \\ reduction=8};
@@ -64,17 +74,17 @@
 % Anchor for expansion (to the right of overall bottleneck block)
 \coordinate (expandAnchor) at ($(input.east)+(45mm,0)$);
 
-\node[layer, below=0mm of expandAnchor] (c1) {Conv 1$\times$1};
+\node[layer, below=-0.5mm of expandAnchor] (c1) {Conv ks=1};
 \node[below right=-1mm and 8mm of c1.south] {reduce};
 \node[bnact, below=5mm of c1] (bn1) {BN};
 \node[act, below=5mm of bn1] (a1) {ReLU};
 
-\node[layer, below=5mm of a1] (c2) {Conv 15\\(stride 4)};
+\node[layer, below=5mm of a1] (c2) {Conv ks=15\\(stride 4)};
 \node[bnact, below=5mm of c2] (bn2) {BN};
 \node[act, below=5mm of bn2] (a2) {ReLU};
 % \node[drop, below=5mm of a2] (drp) {Dropout 0.2};
 
-\node[layer, below=5mm of a2] (c3) {Conv 1$\times$1};
+\node[layer, below=5mm of a2] (c3) {Conv ks=1};
 \node[below right=-1mm and 8mm of c3.south] {expand};
 \node[bnact, below=5mm of c3] (bn3) {BN};
 
@@ -82,8 +92,8 @@
 \node[act, below=5mm of add] (outact) {ReLU};
 
 % Projection/skip branch (since stride=4 or channel change)
-\node[layer, right=10mm of c2, yshift=-7mm, minimum width=18mm] (proj) {Proj 1$\times$1 \\ (stride 4)};
-\node[bnact, below=5mm of proj, minimum width=18mm] (projbn) {BN};
+\node[layer, right=10mm of c2, yshift=-7mm, minimum width=19mm] (proj) {Proj Conv \\ (stride 4)};
+\node[bnact, below=5mm of proj, minimum width=19mm] (projbn) {BN};
 
 % Connections internal
 \draw[darr] (c1) -- (bn1);
