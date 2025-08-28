@@ -43,6 +43,7 @@
 *.synctex.gz\(busy\)
 *.synctex.gz
 *.spl
+poster_backup.tex
 
 !tikz
 tikz/*
