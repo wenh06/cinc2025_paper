@@ -39,3 +39,6 @@
 \newenvironment{indentedquote}[1]%
 {\list{}{\leftmargin=#1\rightmargin=#1}\item[]}%
 {\endlist}
+
+
+\newcommand\wordcount{\input{|"texcount -inc -sum -0 -utf8 -ch -template={SUM} \currfilepath"}}

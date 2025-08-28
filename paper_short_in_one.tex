@@ -1,0 +1,458 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Compiler: pdfLaTeX
+% TeX Live version: 2024
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \ifdefined\ifhandout\else
+\newif\ifhandout
+% \fi
+
+% NOTE: for the final version, set \handouttrue
+% \handoutfalse
+\handouttrue
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% unofficial phase abstract
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \input{contents/unofficial_abstract}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% conference short paper
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% preamble
+
+\documentclass[twocolumn]{cinc}
+
+\usepackage[T1]{fontenc}
+\usepackage{mathtools, graphicx, xurl, hyperref}
+% \usepackage{tikz-cd}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, decorations.pathmorphing, decorations.pathreplacing, backgrounds, positioning, fit, calc, shadows, shapes.misc}
+% \tikzexternalize[prefix=tikz/,optimize command away=\includepdf]
+\usepackage{boldline, multirow}
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{colortbl}
+\usepackage{subcaption}
+\usepackage{relsize}
+\usepackage{fontawesome5}
+\usepackage[ruled, vlined]{algorithm2e}
+
+\usepackage{tabularx} % for 'X' col. type and 'tabularx' environment
+\usepackage{ragged2e} % for '\RaggedRight' macro
+\newcolumntype{L}{>{\RaggedRight}X} % disable full justification
+
+% \tikzstyle{smallcircleblock} = [circle, draw, text width = 0.7em, text centered]
+
+% \tikzstyle{wideblock} = [rectangle, draw, text width = 6.5em, text centered, rounded corners, inner sep = 7pt, minimum height = 1.0em]
+
+\newcommand\ImageNode[4][]{
+  \node[#1] (#2) {\includegraphics[#3]{#4}};
+}
+\definecolor{arrowblue}{RGB}{98,145,224}
+
+
+\newcolumntype{g}{>{\columncolor[gray]{0.8}}l}
+
+
+\newif\ifcoloredtext
+\coloredtextfalse
+
+\newif\ifboxednn
+\boxednntrue
+
+
+\newenvironment{indentedquote}[1]%
+{\list{}{\leftmargin=#1\rightmargin=#1}\item[]}%
+{\endlist}
+
+
+\newcommand\wordcount{\input{|"texcount -inc -sum -0 -utf8 -ch -template={SUM} \currfilepath"}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% title, author, institution
+
+\title{Reliability-Aware Hierarchical Learning for Chagas Detection from Electrocardiogram under Expert Label Scarcity}
+\author{Hao Wen\textsuperscript{1},
+Jingsu Kang\textsuperscript{2} \\ \ \\
+\textsuperscript{1}College of Science, China Agricultural University, Beijing, China\\
+\textsuperscript{2}Tianjin Medical University, Tianjin, China
+}
+
+\begin{document}
+\maketitle
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% abstract
+\begin{abstract}
+
+% almost finished
+
+% --------------------------------------------------
+% Unofficial phase version:
+
+% Aim: This paper introduces a reliability-aware hierarchical learning framework for automated Chagas cardiomyopathy screening from electrocardiograms (ECGs), serving as the ``Revenger'' team's solution to the George B. Moody PhysioNet Challenge 2025.
+
+% Methods: ECGs were preprocessed through resampling to 400 Hz, 0.5-45 Hz Butterworth bandpass filtering, and z-score normalization to zero mean and unit variance. We implemented a convolutional neural network (CNN) based on the ResNet architecture with integrated squeeze-and-excitation (SE) modules for binary prediction (Chagas negative/positive). The public training data are highly imbalanced, with only approximately 2\% positive samples and an even larger scarcity (0.2\%) of expert-labeled samples, where the rest are patient self-reported. We employed a hierarchical upsampling and label smoothing scheme that prioritizes expert-validated samples over patient-reported ones. Expert-validated samples received a higher upsampling rate and a lower label smoothing factor (indicating higher reliability). Our model was optimized using asymmetric loss to further penalize false negatives, and with Adam optimizer and \texttt{OneCycle} learning rate scheduler for rapid convergence. A demographic feature-based stratified split was conducted to reserve 20\% of the data for model selection based on the challenge score: maximizing true positive rate while keeping positive predictions under 5\% prevalence.
+
+% Results: Our approach received a challenge score of 0.290 (Ranking: 76) on the hidden validation set. In our internal evaluation, the highest score was 0.456.
+
+% Conclusion: The proposed method establishes an effective foundation for automated Chagas screening through ECG analysis in resource-limited settings, yet presents clear opportunities for refinement to enhance detection performance and clinical applicability.
+% --------------------------------------------------
+
+Aim: We present a reliability-aware hierarchical learning framework for ECG-based Chagas cardiomyopathy screening in the George B. Moody PhysioNet Challenge 2025 by Team Revenger, aiming to maximize positive case retrieval under prevalence constraints.
+
+Methods: The 12-lead ECGs were resampled to 400 Hz, bandpass filtered (0.5–45 Hz), and z-score normalized. We used a ResNet model integrated with squeeze-and-excitation (SE) modules for binary classification. To address severe class imbalance and the scarcity of expert-confirmed labels, we applied stratified upsampling and reliability-weighted label smoothing to prioritize expert-confirmed positives over self-reported ones. Model training used an asymmetric loss to further penalize false negatives and was optimized with AdamW and a OneCycle learning rate scheduler. Model selection was based on the Challenge score from an internal hold-out subset.
+
+Results: On the hidden validation set, our method received a Challenge score of 0.245 (rank 179~/~364). In cross-validation on the public training data, our approach achieved a Challenge score of 0.451.
+
+Conclusion: The proposed method shows effective performance for ECG-based Chagas screening, and highlights potential for improving detection accuracy and reliability in resource-limited scenarios.
+
+\end{abstract}
+
+
+% main body of the paper
+
+\section{Introduction}
+\label{sec:intro}
+
+% almost finished
+
+Addressing underdiagnosis of Chagas disease through scalable ECG-based screening is the focus of the 2025 George B. Moody PhysioNet Challenge \cite{goldberger2000physionet, cinc2025}. Enabled by aggregated multi-cohort ECG datasets \cite{ribeiro2020automatic, Cardoso_2016_Sami-Trop, wagner2020ptb_xl, Nunes_2021_Incidence, Filho_2020_Prognostic}, the Challenge frames a multi-source learning setting with heterogeneous label reliability and severe class imbalance.
+
+In this work, we propose a reliability-aware hierarchical framework that prioritizes expert-confirmed labels and mitigates severe class imbalance within a deep ECG model, with optimization aligned to prevalence-constrained sensitivity objectives.
+
+
+\section{Methods}
+\label{sec:methods}
+
+% almost finished
+
+\subsection{Datasets and Preprocessing}
+\label{subsec:data}
+
+% almost finished
+
+We used three ECG datasets for model training, with substantial differences in sample size, Chagas prevalence, and label provenance as summarized in Table~\ref{tab:dataset_stats}.
+
+\setlength{\tabcolsep}{4pt} % Default value: 6pt
+\begin{table}[!htp]
+\centering
+\begin{tabular}{rlll}
+\toprule
+Dataset & \multicolumn{1}{c}{Size} & \multicolumn{1}{c}{Chagas rate} & Label provenance \\
+\midrule
+SaMi-Trop   & 1\,631     & 100 \%    & expert-confirmed \\
+CODE-15\%   & 345\,779   & 1.795 \%  & self-reported \\
+PTB-XL      & 21\,799    & 0 \%      & N/A \\
+\bottomrule
+\end{tabular}
+\caption{Dataset statistics and label provenance. Chagas rate is the proportion of recordings labeled positive in each dataset. N/A indicates that confirmed Chagas cases are not expected (non-endemic population).}
+\label{tab:dataset_stats}
+\end{table}
+\setlength{\tabcolsep}{6pt} % Default value: 6pt
+
+All ECGs were uniformly resampled to 400 Hz, bandpass filtered (0.5–45 Hz), and z-score normalized to zero mean and unit variance computed as in Eq.~\ref{eq:z_score}:
+\begin{equation}
+\label{eq:z_score}
+\tilde{\mathbf{x}} = \frac{\mathbf{x} - \boldsymbol{\mu}_x}{\boldsymbol{\sigma}_x}
+\end{equation}
+where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_x$ and $\boldsymbol{\sigma}_x$ are the mean and standard deviation of $\mathbf{x}$, respectively. We excluded ECGs shorter than 1200 samples to ensure inputs contain enough cardiac cycles for stable model analysis.
+
+
+\begin{figure*}[!t]
+\centering
+\begin{tikzpicture}[
+    % font=\small,
+    line width=0.75pt,
+    >={Latex[length=3mm]},
+    node distance=6.4mm,
+    every node/.style={inner sep=2pt},
+    stem/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
+                 align=center, fill=blue!10},
+    block/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=12mm,
+                  align=center, fill=orange!12},
+    se/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
+               align=center, fill=green!12},
+    pool/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
+                 align=center, fill=cyan!10},
+    head/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
+                 align=center, fill=purple!10},
+    output/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
+                align=center, fill=red!10},
+    arrow/.style={-{Latex[length=3mm]}, thick},
+    darr/.style={-{Latex[length=2.4mm]}, thick},
+    dashedarrow/.style={-{Latex[length=2.6mm]}, thick, dashed},
+    ann/.style={inner sep=1pt, align=center},
+    layer/.style={draw, rounded corners=2pt, minimum width=19mm, minimum height=6.2mm,
+                  align=center, fill=blue!6},
+    bnact/.style={draw, rounded corners=2pt, minimum width=19mm, minimum height=6.2mm,
+                  align=center, fill=violet!10},
+    act/.style={draw, rounded corners=2pt, minimum width=19mm, minimum height=6.2mm,
+                  align=center, fill=red!10},
+    drop/.style={draw, rounded corners=2pt, minimum width=19mm, minimum height=6.2mm,
+                  align=center, fill=gray!15, dashed},
+    sum/.style={draw, circle, inner sep=1.6pt, fill=white},
+    % brace/.style={decorate, decoration={brace, amplitude=6pt}},
+    detailbox/.style={draw, rounded corners=3pt, inner sep=6pt, fill=orange!3}
+]
+
+% ================= Left (overall vertical path) =================
+\node[stem] (input) {Input \\ (12$\times$L)};
+\node[stem, below=of input] (stem) {Stem \\ Conv ks=15 \\ BN + ReLU \\ 64 Ch};
+
+% Compressed single bottleneck block (represents 4 stacked blocks)
+% \node[block, below=of stem] (bottleneck) {$4 \times$ Bottleneck Block \\ ks: 1--15--1, stride: 1--4--1 \\ Ch: $512 \to 768 \to 1024 \to 1280$};
+
+\node[block, below=of stem, minimum height=0pt] (bottleneck) {%
+\begin{tikzpicture}[baseline=(ch.base), node distance=1mm]
+\node[inner sep=2pt] (core)
+{Bottleneck Block \\ ks: 1--15--1, stride: 1--4--1};
+\draw[rounded corners=1pt] (core.north west) rectangle (core.south east);
+\node[minimum width=2mm, left=of core] {\larger[3] $\mathbf{4\times}$};
+\node[below left=1mm and -20mm of core.south, inner sep=2pt] (ch) {Ch: $512 \to 768 \to 1024 \to 1280$};
+\end{tikzpicture}
+};
+
+% Global SE
+\node[se, below=of bottleneck] (gse) {Global SE \\ reduction=8};
+
+% Global pooling
+\node[pool, below=of gse] (gap) {Global MaxPool};
+
+% MLP Head
+\node[head, below=of gap] (mlp) {MLP Head \\ (1280 $\rightarrow$ C=2)};
+
+% Output
+\node[output, below=of mlp] (out) {Output Logits};
+
+% Arrows (overall path)
+\draw[arrow] (input) -- (stem);
+\draw[arrow] (stem) -- (bottleneck);
+\draw[arrow] (bottleneck) -- (gse);
+\draw[arrow] (gse) -- (gap);
+\draw[arrow] (gap) -- (mlp);
+\draw[arrow] (mlp) -- (out);
+
+% ================= Right (expanded single bottleneck internals) =================
+% Anchor for expansion (to the right of overall bottleneck block)
+\coordinate (expandAnchor) at ($(input.east)+(45mm,0)$);
+
+\node[layer, below=-0.5mm of expandAnchor] (c1) {Conv ks=1};
+\node[below right=-1mm and 8mm of c1.south] {reduce};
+\node[bnact, below=5mm of c1] (bn1) {BN};
+\node[act, below=5mm of bn1] (a1) {ReLU};
+
+\node[layer, below=5mm of a1] (c2) {Conv ks=15\\(stride 4)};
+\node[bnact, below=5mm of c2] (bn2) {BN};
+\node[act, below=5mm of bn2] (a2) {ReLU};
+% \node[drop, below=5mm of a2] (drp) {Dropout 0.2};
+
+\node[layer, below=5mm of a2] (c3) {Conv ks=1};
+\node[below right=-1mm and 8mm of c3.south] {expand};
+\node[bnact, below=5mm of c3] (bn3) {BN};
+
+\node[sum, below=5mm of bn3] (add) {+};
+\node[act, below=5mm of add] (outact) {ReLU};
+
+% Projection/skip branch (since stride=4 or channel change)
+\node[layer, right=10mm of c2, yshift=-7mm, minimum width=19mm] (proj) {Proj Conv \\ (stride 4)};
+\node[bnact, below=5mm of proj, minimum width=19mm] (projbn) {BN};
+
+% Connections internal
+\draw[darr] (c1) -- (bn1);
+\draw[darr] (bn1) -- (a1);
+\draw[darr] (a1) -- (c2);
+\draw[darr] (c2) -- (bn2);
+\draw[darr] (bn2) -- (a2);
+% \draw[darr] (a2) -- (drp);
+\draw[darr] (a2) -- (c3);
+\draw[darr] (c3) -- (bn3);
+\draw[darr] (bn3) -- (add);
+\draw[darr] (add) -- (outact);
+
+% Skip path
+\draw[darr] (c1.east) -| ($(proj.north)+(0,0mm)$);
+\draw[darr] (proj) -- (projbn);
+\draw[darr] (projbn.south) |- (add.east);
+
+\begin{scope}[on background layer]
+\node[detailbox, fit=(c1) (bn1) (a1) (c2) (bn2) (a2) (c3) (bn3) (proj) (projbn) (add) (outact)] (detail) {};
+\end{scope}
+
+\draw[dashed, line width=0.9pt] (bottleneck.north east) -- (detail.north west);
+\draw[dashed, line width=0.9pt] (bottleneck.south east) -- (detail.south west);
+
+\end{tikzpicture}
+
+\caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size (ks) 15, 64 channels (Ch), Batch Normalization (BN), ReLU) followed by four bottleneck residual blocks, a global squeeze-and-excitation (SE) module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded channels.
+Right: internal bottleneck structure (1--15--1 pointwise--temporal--pointwise). The middle convolution of kernel size 15 uses a stride of 4 for temporal downsampling; kernel size 1 convolutions reduce and then expand channels, and a projection convolution (kernel size 1, stride 4) aligns resolution and width for the residual path. For clarity, dropout layers present in the implementation are omitted. Abbreviations: ks kernel size; Ch channels; BN Batch Normalization; SE squeeze-and-excitation; MLP multi-layer perceptron.}
+\label{fig:model}
+\end{figure*}
+
+
+\subsection{Reliability-Aware Hierarchical Supervision}
+\label{subsec:reliability}
+
+% almost finished
+
+We introduce a hierarchical supervision scheme that encodes source reliability through stratified label smoothing and adaptive upsampling. Three reliability levels are defined: (1) expert-confirmed positives (SaMi-Trop, maximal trust), (2) self-reported samples (CODE-15\%, both positives and negatives, higher uncertainty), and (3) non-endemic negatives (PTB-XL, very low true prevalence but still mildly regularized). Given a one-hot label $\mathbf{y}$ ($[0, 1]$ for positives, $[1, 0]$ for negatives) and number of classes $C = 2,$ the smoothed target is computed as in Eq.~\ref{eq:label_smoothing}:
+\begin{equation}
+\label{eq:label_smoothing}
+\tilde{\mathbf{y}} = (1 - \varepsilon) \cdot \mathbf{y} + \frac{\varepsilon}{C} \cdot \mathbf{1},
+\end{equation}
+where $\varepsilon$ is the smoothing factor which depends on the reliability level: 0.0 (SaMi positives), 0.6 (CODE-15\% positives \& negatives), 0.2 (PTB-XL negatives). This attenuates overconfident gradients for noisier or potentially misreported labels while preserving sharp supervision on expert-confirmed cases.
+
+Severe class imbalance was mitigated by upsampling positives during training: positive samples from CODE-15\% were upsampled by a factor of 3, and those from SaMi-Trop by 12. No upsampling was applied to PTB-XL, which contains no positives. We chose these factors after reviewing hidden validation scores from multiple submissions, as shown in Table~\ref{tab:upsampling_schemes}.
+
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{ccc}
+\toprule
+\multicolumn{2}{c}{Upsample factor} & \multirow{2}{*}{Challenge score} \\
+\cmidrule(lr){1-2}
+CODE-15\% &  SaMi-Trop & \\
+\midrule
+- & -     & 0.239$^*$ \\
+3 & 7      & 0.212 \\
+3 & 12    & \textbf{0.245} \\
+10 & 120   & 0.210 \\
+6 & 36     & 0.221 \\
+\bottomrule
+\end{tabular}
+\caption{Representative upsampling schemes and corresponding Challenge scores on the hidden validation set. The model and training strategies used were the same. “-” indicates no upsampling.\\
+$^*$ obtained during the unofficial phase.
+}
+\label{tab:upsampling_schemes}
+\end{table}
+
+
+Smoothed labels and upsampling strategies for each dataset are summarized in Table~\ref{tab:augmentation}.
+
+
+\begin{table}[!htp]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\multirow{2}{*}{Dataset} & Upsampling & \multicolumn{2}{c}{Smoothed labels} \\ \cmidrule(lr){3-4}
+& factor & negative & positive \\
+\midrule
+SaMi-Trop & $12$ & N/A           & $[0,\,1]$     \\
+CODE-15\% & $3$ & $[0.7,\,0.3]$ & $[0.3,\,0.7]$ \\
+PTB-XL    & $1$ & $[0.9,\,0.1]$ & N/A           \\
+\bottomrule
+\end{tabular}
+\caption{Smoothed labels (computed from Eq.~\ref{eq:label_smoothing}) and upsampling strategies for each dataset.}
+\label{tab:augmentation}
+\end{table}
+
+
+\subsection{Model Architecture}
+\label{subsec:model}
+
+% almost finished
+
+We build upon the 1D ResNet ECG classifier of Ribeiro et al.~\cite{ribeiro2020automatic} and introduce three modifications.
+
+\textbf{(1) Bottleneck residual blocks.} We replace basic ResNet blocks with bottleneck blocks of kernel sizes $1$–$15$–$1$ (pointwise--temporal--pointwise). The middle temporal convolution applies a stride of 4 for downsampling; the two 1$\times$1 convolutions first reduce then expand channels with an expansion factor of 4. A projection 1$\times$1 convolution (stride 4) is used in the residual branch whenever temporal resolution or channel width changes. Across the four blocks, the reduced (bottleneck) channel widths are $128 \to 192 \to 256 \to 320$, yielding expanded output widths $512 \to 768 \to 1024 \to 1280$.
+
+\textbf{(2) Global squeeze-and-excitation (SE).} After the final bottleneck block, a single global SE module (reduction ratio 8) \cite{hu2018senet} performs temporal average pooling to a channel descriptor, applies a two-layer bottleneck multi-layer perceptron (MLP) $1280 \to 160 \to 1280$ with ReLU and sigmoid gating, and rescales the feature map channel-wise.
+
+\textbf{(3) Global pooling head for variable input length.} Instead of flattening a fixed-length feature map as in the original baseline, we apply global max pooling over the remaining temporal dimension, yielding a 1280-dimensional vector irrespective of input length $L$. This vector is fed to a lightweight two-layer classification MLP: a hidden fully connected layer ($1280 \to 1024$) with non-linear activation and dropout (rate 0.2), followed by a final linear layer ($1024 \to 2$) producing class logits.
+
+\textbf{Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
+
+Overall, the changes primarily enable variable-length inference and add global channel reweighting with minimal structural overhead. The resulting model architecture is illustrated in Fig.~\ref{fig:model}.
+
+
+\subsection{Training and Implementation Setups}
+\label{subsec:train}
+
+% almost finished
+
+We employed an asymmetric loss (ASL) \cite{ridnik2021asymmetric_loss} to further complement the reliability-aware label smoothing strategy, jointly addressing the challenges of severe class imbalance. Let $z$ denote the logits and $p=\sigma(z)$ the predicted probability of the Chagas-positive class, the ASL is defined in Eq.~\ref{eq:asl} with separate focusing parameters for positives and negatives and a clipped negative probability:
+\begin{equation}
+\label{eq:asl}
+\begin{multlined}
+L = -y \cdot (1-p)^{\gamma_{+}} \log(p) \\
+\phantom{L = } - (1-y) \cdot (p_m)^{\gamma_{-}} \log(1-p_m),
+\end{multlined}
+\end{equation}
+where $p_m = \max(p - m, 0),$ $(\gamma_{+},\gamma_{-})=(1,4)$ and margin $\delta=0.05$. We train for 30 epochs with batch size 128 using the AdamW optimizer (initial learning rate $1\times10^{-4}$, peak $6\times10^{-4}$ under a One-Cycle scheduler, weight decay $1\times10^{-2}$). Early stopping (patience 10 epochs, monitored on a fixed 20\% internal hold-out subset) selects the final model via the Challenge metric. Each training segment is a uniform random crop (or center trim if shorter) of length 4,096 samples. The full implementation, including model construction, data pipeline, and optimization utilities, is based on the \texttt{torch-ECG} framework \cite{torch_ecg_paper}.
+
+
+\section{Results}
+\label{sec:results}
+
+% almost finished
+
+The Challenge score of our team ``Revenger'' on the hidden validation set was 0.245, ranking 170th among 350 submissions. The score on the internal hold-out of the public training data, the hidden validation score, and the validation ranking are summarized in Table~\ref{tab:scores}.
+
+\begin{table}[!htp]
+\centering
+\begin{tabular}{r|r|r|r}
+Training & Validation & Test & Ranking \\\hline
+$0.451 \pm 0.005$ & 0.245 & TBA & 179~/~364 \\\hline
+\end{tabular}
+\caption{Challenge scores for our submitted entries (team ``Revenger''). Training: internal hold-out mean $\pm$ std over repeated runs. Validation: best among 10 validation submissions. Test: to be announced. Ranking: position on the hidden validation leaderboard.}
+\label{tab:scores}
+\end{table}
+
+
+\section{Discussion and Conclusions}
+\label{sec:discu}
+
+% almost finished.
+
+The hidden validation Challenge score presented in Table~\ref{tab:scores} indicates that our proposed method is effective for Chagas screening from ECGs, albeit with substantial room for improvement. The result demonstrates our model's ability to learn diagnostically relevant features from ECGs for this task under scarce and noisy supervision. This is achieved through reliability-aware label smoothing, which incorporates both label provenance and reliability instead of treating all positive labels uniformly. Together with the asymmetric loss and strategic upsampling, these results indicate that explicitly modeling label reliability helps stabilize the learning process more effectively than introducing additional architectural complexity. Overall, our approach offers a scalable and resource-efficient solution and aligns well with the Challenge's objective of identifying high-risk individuals under limited serological testing capacity.
+
+However, the performance gap between our internal hold-out subset and the hidden validation set suggests two primary limitations. First, the reliability weights (smoothing factors) were pre-defined based on label provenance rather than learned from data. This static assignment cannot capture the inherent heterogeneity of label quality within each source. Second, positive upsampling was applied uniformly at the dataset level using fixed factors. This strategy overlooks variations in individual sample difficulty and does not adapt to the model's evolving confidence during training. Furthermore, we did not make use of the additional labels available in some datasets, such as arrhythmia labels, to design and implement auxiliary learning tasks that could have enhanced the performance of the main task, Chagas screening.
+
+Future research directions will primarily focus on the development of a self-adaptive supervision framework. This includes dynamic weighting schemes for learning instance-specific reliability scores, moving beyond static smoothing factors; and adaptive sampling strategies that respond to the model's evolving confidence during training, offering a promising alternative to fixed upsampling factors. Data augmentation techniques, such as CutMix \cite{yun2019cutmix} and SMOTE \cite{Chawla_2002_SMOTE}, could be applied to further expand and diversify the positive samples, thereby enhancing the model's robustness against overfitting and improving generalization to underrepresented patterns. Additionally, a multi-task learning framework leveraging auxiliary arrhythmia labels could enhance feature representation and improve generalization for the primary Chagas screening task. Exploring self-supervised pre-training on large-scale unlabeled ECG data also represents a promising direction to learn more transferable representations before fine-tuning on the target task.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% acknowledgments
+
+% \input{contents/acknowledgements}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{cinc}
+\bibliography{references}
+% \bibliography{references-reduced}
+
+\begin{correspondence}
+Hao Wen\\
+No. 17, Qinghua East Road, Haidian District, Beijing, China\\
+wenh06@cau.edu.cn,wenh06@gmail.com
+\end{correspondence}
+
+\balance
+
+\end{document}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% conference poster
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \input{poster}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% long paper
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \input{paper_long}
