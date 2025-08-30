@@ -1,11 +1,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2025 PhysioNet/CinC Challenge Poster
-% Chagas ECG Screening - Team Revenger
-% 
-% Based on baposter template by T. Reveyrand
-% Original template by Brian Amberg (baposter@brian-amberg.de)
-% Downloaded from: http://www.LaTeXTemplates.com
-% License: CC BY-NC-SA 3.0
+% NIWeek 2014 Poster by T. Reveyrand
+% www.microwave.fr
+% http://www.microwave.fr/LaTeX.html
+% ---------------------------------------
+%
+% Original template created by:
+% Brian Amberg (baposter@brian-amberg.de)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %----------------------------------------------------------------------------------------
@@ -17,11 +24,24 @@
 \input{preamble}
 
 \usepackage{textcomp}
+\usepackage{eso-pic}
+\usepackage{enumitem}
 \usepackage{hyperref}
+
+\setlist[itemize]{
+  itemsep=1.5pt,
+  topsep=3pt,
+  parsep=0pt,
+  partopsep=0pt,
+  leftmargin=1em,
+  labelsep=0.4em
+}
+
+\setlength{\abovedisplayskip}{3pt plus 1pt minus 1pt}
+\setlength{\belowdisplayskip}{3pt plus 1pt minus 1pt}
 
 \graphicspath{{images/}} % Directory in which figures are stored
 
-% Color definitions (reusing 2024 poster color scheme)
 \definecolor{bordercol}{RGB}{40,40,40} % Border color of content boxes
 \definecolor{headercol1}{RGB}{186,215,230} % Background color for the header in the content boxes (left side)
 \definecolor{headercol2}{RGB}{120,120,120} % Background color for the header in the content boxes (right side)
@@ -29,10 +49,30 @@
 \definecolor{boxcolor}{RGB}{210,235,250} % Background color for the content in the content boxes
 
 \definecolor{jdhblue}{RGB}{2,93,186}
+
 \definecolor{zkblue}{RGB}{88,135,175}
 \definecolor{zkbackground}{RGB}{230,232,234}
 
+
+% \usetikzlibrary{shapes, arrows, external, decorations.pathmorphing, backgrounds, positioning, fit, petri, calc, hobby, cd}
+
+
 \begin{document}
+
+% \background{ % Set the background to an image (background.pdf)
+% \begin{tikzpicture}[remember picture,overlay]
+% \draw (current page.north west)+(-2em,2em) node[anchor=north west]
+% {\includegraphics[height=1.1\textheight]{images/baposter_background.pdf}};
+% \end{tikzpicture}
+% }
+
+% add conference banner
+\AddToShipoutPictureFG*{%
+  \AtPageLowerLeft{%
+    \hspace{0.82em}
+    \raisebox{0.2ex}{\includegraphics[width=0.16\textwidth]{cinc2025-banner.png}}
+  }
+}
 
 \begin{poster}{
 grid=false,
@@ -40,10 +80,12 @@ borderColor=bordercol, % Border color of content boxes
 headerColorOne=headercol1, % Background color for the header in the content boxes (left side)
 headerColorTwo=headercol2, % Background color for the header in the content boxes (right side)
 headerFontColor=headerfontcol, % Text color for the header text in the content boxes
+% boxColorOne=boxcolor, % Background color for the content in the content boxes
 boxColorOne=zkbackground,
 headershape=roundedright, % Specify the rounded corner in the content box headers
 headerfont=\Large\sf\bf, % Font modifiers for the text in the content box headers
 textborder=rectangle,
+% background=user,
 background=none,
 headerborder=open, % Change to closed for a line under the content box headers
 boxshade=plain
@@ -53,28 +95,31 @@ boxshade=plain
 %	TITLE AND AUTHOR NAME
 %----------------------------------------------------------------------------------------
 %
-% TODO: Add logos when available - current paths may not exist
-% \IfFileExists{images/logo_cau_science.png}{\includegraphics[scale=0.401]{images/logo_cau_science.png}}{CAU Logo}
-{{\bf TODO: CAU Logo}} % University/lab logo placeholder
+{\includegraphics[scale=0.401]{logo_cau_science.png}} % University/lab logo
 {
-{\bf \fontsize{18pt}{18pt} \selectfont Reliability-Aware Hierarchical Learning for Chagas Detection from Electrocardiogram under Expert Label Scarcity}
+{\bf \fontsize{19pt}{19pt} \selectfont Reliability-Aware Hierarchical Learning for Chagas Detection from ECG under Expert Label Scarcity}
 } % Poster title
 {\vspace{0.3em} \smaller Hao WEN$^1$, Jingsu KANG$^2$  \\  % Author names
 
-$^1${\it College of Science, China Agricultural University}\\
+$^1${\it College of Science, China Agricultural University}\qquad
 $^2${\it Tianjin Medical University} \\
 \vspace{0.2cm}
-{\Large \bf{The George B. Moody PhysioNet Challenge 2025} $\cdot$ \bf{Team Revenger}}
+{\Large \bf{The George B. Moody PhysioNet Challenge 2025}, ~~~\bf{Team Revenger}}
 }
-% \IfFileExists{logo_tmu.jpeg}{\includegraphics[scale=0.101]{logo_tmu.jpeg}}{TMU Logo}
-{{\bf TODO: TMU Logo}} % University logo placeholder
+{\includegraphics[scale=0.101]{logo_tmu.jpeg}}
+
+
+\newif\ifcoloredtext
+\coloredtexttrue
+\newif\ifboxednn
+\boxednntrue
 
 
 %----------------------------------------------------------------------------------------
 %	INTRODUCTION & CHALLENGE CONTEXT
 %----------------------------------------------------------------------------------------
 
-\headerbox{Introduction \& Challenge Context}{name=introduction, column=0, row=0, span=3}{
+\headerbox{Proposed Reliability-Aware Framework}{name=introduction, column=0, row=0, span=3}{
 
 \begin{itemize}
 \item {\bf Team Revenger – PhysioNet Challenge 2025}: ECG-based Chagas cardiomyopathy screening in resource-limited settings
@@ -93,7 +138,6 @@ $^2${\it Tianjin Medical University} \\
 
 Three ECG datasets with heterogeneous label reliability and Chagas prevalence:
 
-\vspace{0.3cm}
 \begin{center}
 \begin{tabular}{rlll}
 \toprule
@@ -105,7 +149,6 @@ PTB-XL      & 21,799    & 0.0 \%      & N/A (non-endemic) \\
 \bottomrule
 \end{tabular}
 \end{center}
-\vspace{0.3cm}
 
 \begin{itemize}
 \item {\bf Preprocessing}: Resampled to 400 Hz, bandpass filtered (0.5–45 Hz), z-score normalized
@@ -123,11 +166,9 @@ PTB-XL      & 21,799    & 0.0 \%      & N/A (non-endemic) \\
 {\bf Label Smoothing \& Upsampling Strategy}
 
 Hierarchical supervision encoding source reliability through stratified label smoothing:
-
-\vspace{0.2cm}
-{\bf Formula:} $\tilde{\mathbf{y}} = (1 - \varepsilon) \cdot \mathbf{y} + \frac{\varepsilon}{C} \cdot \mathbf{1}$
-\vspace{0.2cm}
-
+\[
+\text{\bf Formula:} ~~ \tilde{\mathbf{y}} = (1 - \varepsilon) \cdot \mathbf{y} + \frac{\varepsilon}{C} \cdot \mathbf{1}
+\]
 Where smoothing factor $\varepsilon$ depends on reliability:
 \begin{itemize}
 \item SaMi positives: $\varepsilon = 0.0$ (max trust)
@@ -156,57 +197,20 @@ CODE & SaMi & \\
 %	MODEL ARCHITECTURE
 %----------------------------------------------------------------------------------------
 
-\headerbox{Model Architecture}{name=architecture, column=0, row=2, span=2, below=data}{
+\headerbox{Model Architecture}{name=architecture, column=0, row=2, span=1, below=data}{
 
-{\bf Enhanced 1D ResNet with SE Modules \& Global Pooling}
+{\bf Enhanced 1D ResNet with SE Modules}
 
 \begin{center}
-\resizebox{0.95\linewidth}{!}{%
-\begin{tikzpicture}[
-    line width=0.75pt,
-    >={Latex[length=3mm]},
-    node distance=6.4mm,
-    every node/.style={inner sep=2pt},
-    stem/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
-                 align=center, fill=blue!10},
-    block/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=12mm,
-                  align=center, fill=orange!12},
-    se/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
-               align=center, fill=green!12},
-    pool/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
-                 align=center, fill=cyan!10},
-    head/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
-                 align=center, fill=purple!10},
-    output/.style={draw, rounded corners=2pt, minimum width=30mm, minimum height=9.5mm,
-                align=center, fill=red!10},
-    arrow/.style={-{Latex[length=3mm]}, thick},
-]
-
-% Main architecture path
-\node[stem] (input) {Input \\ (12$\times$L)};
-\node[stem, below=of input] (stem) {Stem \\ Conv ks=15 \\ BN + ReLU \\ 64 Ch};
-\node[block, below=of stem] (bottleneck) {$4 \times$ Bottleneck Block \\ ks: 1--15--1, stride: 1--4--1 \\ Ch: $512 \to 768 \to 1024 \to 1280$};
-\node[se, below=of bottleneck] (gse) {Global SE \\ reduction=8};
-\node[pool, below=of gse] (gap) {Global MaxPool};
-\node[head, below=of gap] (mlp) {MLP Head \\ (1280 $\rightarrow$ C=2)};
-\node[output, below=of mlp] (out) {Output Logits};
-
-% Arrows
-\draw[arrow] (input) -- (stem);
-\draw[arrow] (stem) -- (bottleneck);
-\draw[arrow] (bottleneck) -- (gse);
-\draw[arrow] (gse) -- (gap);
-\draw[arrow] (gap) -- (mlp);
-\draw[arrow] (mlp) -- (out);
-
-\end{tikzpicture}
+\resizebox{1.03\linewidth}{!}{%
+  \input{tikz_plots/resnet_nature_comm_bottle_neck}
 }
 \end{center}
 
 \begin{itemize}
-\item {\bf Bottleneck blocks}: 1$\times$1–15$\times$1 convolutions with expansion factor 4, stride 4 downsampling
-\item {\bf Global SE}: Channel attention with reduction ratio 8 for temporal feature recalibration  
-\item {\bf Variable-length inputs}: Global max pooling enables inference on ECGs of any duration
+\item {\bf Bottleneck blocks}: 1-15-1 convolutions, expansion factor 4, stride 4 downsampling
+\item {\bf Global SE}: Channel attention, reduction ratio 8 for temporal feature recalibration  
+\item {\bf Variable-length inputs}: Global MaxPool enables inference on ECGs of any duration
 \end{itemize}
 
 }
@@ -215,18 +219,19 @@ CODE & SaMi & \\
 %	TRAINING & OPTIMIZATION
 %----------------------------------------------------------------------------------------
 
-\headerbox{Training \& Optimization}{name=training, column=2, row=2, span=1, below=supervision}{
+\headerbox{Training \& Optimization}{name=training, column=1, row=2, span=1, below=data}{
 
-{\bf Asymmetric Loss \& Optimization Setup}
+% {\bf Asymmetric Loss \& Optimization Setup}
 
 \begin{itemize}
 \item {\bf Asymmetric Loss}: $L = -y(1-p)^{\gamma_{+}} \log(p) - (1-y)(p_m)^{\gamma_{-}} \log(1-p_m)$
 \item Parameters: $(\gamma_{+},\gamma_{-})=(1,4)$, margin $\delta=0.05$
-\item {\bf Optimizer}: AdamW with OneCycle scheduler
-\item {\bf Learning rate}: $1 \times 10^{-4}$ initial, $6 \times 10^{-4}$ peak
+\item {\bf Optimizer}: AdamW
+\item {\bf LR Scheduler}: OneCycle
+\item {\bf LR}: $1 \times 10^{-4}$ initial, $6 \times 10^{-4}$ peak
 \item {\bf Training}: 30 epochs, batch size 128, weight decay $1 \times 10^{-2}$
 \item {\bf Input}: 4,096 samples (uniform crop/center trim)
-\item {\bf Early stopping}: Challenge score on 20\% internal hold-out
+\item {\bf Early stopping}: Challenge score on 20\% internal hold-out subset
 \end{itemize}
 
 }
@@ -295,34 +300,34 @@ $0.451 \pm 0.005$ & 0.245 & 179/364 & TBA \\
 %	ACKNOWLEDGEMENTS
 %----------------------------------------------------------------------------------------
 
-\headerbox{Acknowledgements}{name=acknowledgements, column=0, row=5, span=3, below=discussion}{
+% \headerbox{Acknowledgements}{name=acknowledgements, column=0, row=5, span=3, below=discussion}{
 
-We thank Professor {\bf Deren Han} from the School of Mathematical Sciences, Beihang University for providing GPU servers. We acknowledge the PhysioNet Challenge organizers and the contributing datasets.
+% We thank Professor {\bf Deren Han} from the School of Mathematical Sciences, Beihang University for providing GPU servers. We acknowledge the PhysioNet Challenge organizers and the contributing datasets.
 
-}
+% }
 
 %----------------------------------------------------------------------------------------
 %	REFERENCES
 %----------------------------------------------------------------------------------------
 
-\headerbox{References}{name=references, column=0, row=6, span=3, below=acknowledgements}{
+% \headerbox{References}{name=references, column=0, row=6, span=3, below=acknowledgements}{
 
-\begin{thebibliography}{9}
-\bibitem{goldberger2000} Goldberger AL, et al. PhysioBank, PhysioToolkit, and PhysioNet. {\it Circulation} 2000;101(23):e215-e220.
-\bibitem{ribeiro2020} Ribeiro AH, et al. Automatic diagnosis of the 12-lead ECG using a deep neural network. {\it Nat Commun} 2020;11:1760.
-\bibitem{hu2018} Hu J, et al. Squeeze-and-Excitation Networks. {\it CVPR} 2018:7132-7141.
-\bibitem{ridnik2021} Ridnik T, et al. Asymmetric Loss For Multi-Label Classification. {\it ICCV} 2021:82-91.
-\bibitem{yun2019} Yun S, et al. CutMix: Regularization Strategy to Train Strong Classifiers. {\it ICCV} 2019:6023-6032.
-\bibitem{chawla2002} Chawla NV, et al. SMOTE: Synthetic Minority Oversampling Technique. {\it JAIR} 2002;16:321-357.
-\end{thebibliography}
+% \begin{thebibliography}{9}
+% \bibitem{goldberger2000} Goldberger AL, et al. PhysioBank, PhysioToolkit, and PhysioNet. {\it Circulation} 2000;101(23):e215-e220.
+% \bibitem{ribeiro2020} Ribeiro AH, et al. Automatic diagnosis of the 12-lead ECG using a deep neural network. {\it Nat Commun} 2020;11:1760.
+% \bibitem{hu2018} Hu J, et al. Squeeze-and-Excitation Networks. {\it CVPR} 2018:7132-7141.
+% \bibitem{ridnik2021} Ridnik T, et al. Asymmetric Loss For Multi-Label Classification. {\it ICCV} 2021:82-91.
+% \bibitem{yun2019} Yun S, et al. CutMix: Regularization Strategy to Train Strong Classifiers. {\it ICCV} 2019:6023-6032.
+% \bibitem{chawla2002} Chawla NV, et al. SMOTE: Synthetic Minority Oversampling Technique. {\it JAIR} 2002;16:321-357.
+% \end{thebibliography}
 
-}
+% }
 
 %----------------------------------------------------------------------------------------
 %	FOOTER
 %----------------------------------------------------------------------------------------
 
-\headerbox{}{name=foottext, column=0, span=3, below=references, textborder=none, headerborder=none, boxheaderheight=0pt}{
+\headerbox{}{name=foottext, column=0, span=3, below=future, textborder=none, headerborder=none, boxheaderheight=0pt}{
 \hfill \small \textit{Code, configs, etc. are available at https://github.com/wenh06/cinc2025, and is based on https://github.com/DeepPSP/torch\_ecg.}
 }
 
