@@ -112,7 +112,7 @@ Aim: We present a reliability-aware hierarchical learning framework for ECG-base
 
 Methods: The 12-lead ECGs were resampled to 400 Hz, bandpass filtered (0.5–45 Hz), and z-score normalized. We used a ResNet model integrated with squeeze-and-excitation (SE) modules for binary classification. To address severe class imbalance and the scarcity of expert-confirmed labels, we applied stratified upsampling and reliability-weighted label smoothing to prioritize expert-confirmed positives over self-reported ones. Model training used an asymmetric loss to further penalize false negatives and was optimized with AdamW and a OneCycle learning rate scheduler. Model selection was based on the Challenge score from an internal hold-out subset.
 
-Results: On the hidden validation set, our method received a Challenge score of 0.245 (rank 179~/~364). In cross-validation on the public training data, our approach achieved a Challenge score of 0.451.
+Results: On the hidden validation set, our method received a Challenge score of 0.245 (rank 187~/~373). In cross-validation on the public training data, our approach achieved a Challenge score of 0.451.
 
 Conclusion: The proposed method shows effective performance for ECG-based Chagas screening, and highlights potential for improving detection accuracy and reliability in resource-limited scenarios.
 
@@ -163,9 +163,9 @@ PTB-XL      & 21\,799    & 0 \%      & N/A \\
 All ECGs were uniformly resampled to 400 Hz, bandpass filtered (0.5–45 Hz), and z-score normalized to zero mean and unit variance computed as in Eq.~\ref{eq:z_score}:
 \begin{equation}
 \label{eq:z_score}
-\tilde{\mathbf{x}} = \frac{\mathbf{x} - \boldsymbol{\mu}_x}{\boldsymbol{\sigma}_x}
+\tilde{\mathbf{x}} = \frac{\mathbf{x} - \boldsymbol{\mu}_{\mathbf{x}}}{\boldsymbol{\sigma}_{\mathbf{x}}}
 \end{equation}
-where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_x$ and $\boldsymbol{\sigma}_x$ are the mean and standard deviation of $\mathbf{x}$, respectively. We excluded ECGs shorter than 1200 samples to ensure inputs contain enough cardiac cycles for stable model analysis.
+where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_{\mathbf{x}}$ and $\boldsymbol{\sigma}_{\mathbf{x}}$ are the mean and standard deviation of $\mathbf{x}$, respectively. We excluded ECGs shorter than 1200 samples to ensure inputs contain enough cardiac cycles for stable model analysis.
 
 
 \begin{figure*}[!t]
@@ -307,30 +307,26 @@ Right: internal bottleneck structure (1--15--1 pointwise--temporal--pointwise). 
 We introduce a hierarchical supervision scheme that encodes source reliability through stratified label smoothing and adaptive upsampling. Three reliability levels are defined: (1) expert-confirmed positives (SaMi-Trop, maximal trust), (2) self-reported samples (CODE-15\%, both positives and negatives, higher uncertainty), and (3) non-endemic negatives (PTB-XL, very low true prevalence but still mildly regularized). Given a one-hot label $\mathbf{y}$ ($[0, 1]$ for positives, $[1, 0]$ for negatives) and number of classes $C = 2,$ the smoothed target is computed as in Eq.~\ref{eq:label_smoothing}:
 \begin{equation}
 \label{eq:label_smoothing}
-\tilde{\mathbf{y}} = (1 - \varepsilon) \cdot \mathbf{y} + \frac{\varepsilon}{C} \cdot \mathbf{1},
+\tilde{\mathbf{y}} = (1 - \varepsilon) \cdot {\mathbf{y}} + \frac{\varepsilon}{C} \cdot {\mathbf{1}},
 \end{equation}
 where $\varepsilon$ is the smoothing factor which depends on the reliability level: 0.0 (SaMi positives), 0.6 (CODE-15\% positives \& negatives), 0.2 (PTB-XL negatives). This attenuates overconfident gradients for noisier or potentially misreported labels while preserving sharp supervision on expert-confirmed cases.
 
 Severe class imbalance was mitigated by upsampling positives during training: positive samples from CODE-15\% were upsampled by a factor of 3, and those from SaMi-Trop by 12. No upsampling was applied to PTB-XL, which contains no positives. We chose these factors after reviewing hidden validation scores from multiple submissions, as shown in Table~\ref{tab:upsampling_schemes}.
-
-
 \begin{table}[!htbp]
 \centering
 \begin{tabular}{ccc}
 \toprule
-\multicolumn{2}{c}{Upsample factor} & \multirow{2}{*}{Challenge score} \\
-\cmidrule(lr){1-2}
-CODE-15\% &  SaMi-Trop & \\
-\midrule
-- & -     & 0.239$^*$ \\
-3 & 7      & 0.212 \\
-3 & 12    & \textbf{0.245} \\
-10 & 120   & 0.210 \\
-6 & 36     & 0.221 \\
+\multicolumn{2}{c}{Upsample factor} & \multirow{2}{*}{Challenge score} \\ \cmidrule(lr){1-2}
+CODE-15\% & SaMi-Trop               &                                  \\ \midrule
+-         & -                       & 0.239$^\dagger$                        \\
+3         & 7                       & 0.212                            \\
+3         & 12                      & \textbf{0.245}                   \\
+10        & 120                     & 0.210                            \\
+6         & 36                      & 0.221                            \\
 \bottomrule
 \end{tabular}
 \caption{Representative upsampling schemes and corresponding Challenge scores on the hidden validation set. The model and training strategies used were the same. “-” indicates no upsampling.\\
-$^*$ obtained during the unofficial phase.
+$^\dagger$ obtained during the unofficial phase.
 }
 \label{tab:upsampling_schemes}
 \end{table}
@@ -346,7 +342,7 @@ Smoothed labels and upsampling strategies for each dataset are summarized in Tab
 \multirow{2}{*}{Dataset} & Upsampling & \multicolumn{2}{c}{Smoothed labels} \\ \cmidrule(lr){3-4}
 & factor & negative & positive \\
 \midrule
-SaMi-Trop & $12$ & N/A           & $[0,\,1]$     \\
+SaMi-Trop & $12$ & N/A          & $[0,\,1]$     \\
 CODE-15\% & $3$ & $[0.7,\,0.3]$ & $[0.3,\,0.7]$ \\
 PTB-XL    & $1$ & $[0.9,\,0.1]$ & N/A           \\
 \bottomrule
@@ -363,15 +359,16 @@ PTB-XL    & $1$ & $[0.9,\,0.1]$ & N/A           \\
 
 We build upon the 1D ResNet ECG classifier of Ribeiro et al.~\cite{ribeiro2020automatic} and introduce three modifications.
 
-\textbf{(1) Bottleneck residual blocks.} We replace basic ResNet blocks with bottleneck blocks of kernel sizes $1$–$15$–$1$ (pointwise--temporal--pointwise). The middle temporal convolution applies a stride of 4 for downsampling; the two convolutions of kernel size 1 first reduce then expand channels with an expansion factor of 4. A projection convolution (kernel size 1, stride 4) is used in the residual branch whenever temporal resolution or channel width changes. Across the four blocks, the reduced (bottleneck) channel widths are $128 \to 192 \to 256 \to 320$, yielding expanded output widths $512 \to 768 \to 1024 \to 1280$.
+\textbf{(1) Bottleneck residual blocks.} We replace basic ResNet blocks with bottleneck blocks of kernel sizes $1$–$15$–$1$ (pointwise--temporal--pointwise). The middle temporal convolution applies a stride of 4 for downsampling; the two convolutions (kernel size 1) first reduce the number of channels and then expand them with an expansion factor of 4. A projection convolution (kernel size 1, stride 4) is used in the residual branch whenever temporal resolution or channel width changes. Across the four blocks, the reduced (bottleneck) channel widths are $128 \to 192 \to 256 \to 320$, yielding expanded output widths $512 \to 768 \to 1024 \to 1280$.
 
 \textbf{(2) Global squeeze-and-excitation (SE).} After the final bottleneck block, a single global SE module (reduction ratio 8) \cite{hu2018senet} performs temporal average pooling to a channel descriptor, applies a two-layer bottleneck multi-layer perceptron (MLP) $1280 \to 160 \to 1280$ with ReLU and sigmoid gating, and rescales the feature map channel-wise.
 
 \textbf{(3) Global pooling head for variable input length.} Instead of flattening a fixed-length feature map as in the original baseline, we apply global max pooling over the remaining temporal dimension, yielding a 1280-dimensional vector irrespective of input length $L$. This vector is fed to a lightweight two-layer classification MLP: a hidden fully connected layer ($1280 \to 1024$) with non-linear activation and dropout (rate 0.2), followed by a final linear layer ($1024 \to 2$) producing class logits.
 
-\textbf{Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
+\textbf{Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block, we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
 
-Overall, the changes primarily enable variable-length inference and add global channel reweighting with minimal structural overhead. The resulting model architecture is illustrated in Fig.~\ref{fig:model}.
+% Overall, the changes primarily enable variable-length inference and add global channel reweighting with minimal structural overhead.
+The overall model architecture is illustrated in Fig.~\ref{fig:model}.
 
 
 \subsection{Training and Implementation Setups}
@@ -379,7 +376,7 @@ Overall, the changes primarily enable variable-length inference and add global c
 
 % almost finished
 
-We employed an asymmetric loss (ASL) \cite{ridnik2021asymmetric_loss} to further complement the reliability-aware label smoothing strategy, jointly addressing the challenges of severe class imbalance. Let $z$ denote the logits and $p=\sigma(z)$ the predicted probability of the Chagas-positive class, the ASL is defined in Eq.~\ref{eq:asl} with separate focusing parameters for positives and negatives and a clipped negative probability:
+We employed an asymmetric loss (ASL) \cite{ridnik2021asymmetric_loss} to complement the reliability-aware label smoothing strategy, jointly addressing the challenges of severe class imbalance. Let ${\mathbf{z}} = (z_0, z_1)$ denote the logits and $p=\operatorname{softmax}({\mathbf{z}})_1$ the predicted probability of the Chagas-positive class. The ASL is defined in Eq.~\ref{eq:asl} with separate focusing parameters for positives and negatives and a clipped negative probability term:
 \begin{equation}
 \label{eq:asl}
 \begin{multlined}
@@ -387,7 +384,7 @@ L = -y \cdot (1-p)^{\gamma_{+}} \log(p) \\
 \phantom{L = } - (1-y) \cdot (p_m)^{\gamma_{-}} \log(1-p_m),
 \end{multlined}
 \end{equation}
-where $p_m = \max(p - m, 0),$ $(\gamma_{+},\gamma_{-})=(1,4)$ and margin $\delta=0.05$. We train for 30 epochs with batch size 128 using the AdamW optimizer (initial learning rate $1\times10^{-4}$, peak $6\times10^{-4}$ under a One-Cycle scheduler, weight decay $1\times10^{-2}$). Early stopping (patience 10 epochs, monitored on a fixed 20\% internal hold-out subset) selects the final model via the Challenge metric. Each training segment is a uniform random crop (or center trim if shorter) of length 4,096 samples. The full implementation, including model construction, data pipeline, and optimization utilities, is based on the \texttt{torch-ECG} framework \cite{torch_ecg_paper}.
+where $y$ is the (smoothed) positive-class target probability, $p_m = \max(p - m, 0),$ $(\gamma_{+},\gamma_{-})=(1,4)$ and margin $m=0.05$. We train for 30 epochs with batch size 128 using the AdamW optimizer (initial learning rate $1\times10^{-4}$, peak $6\times10^{-4}$ under a OneCycle scheduler, weight decay $1\times10^{-2}$). Early stopping (patience 10 epochs, monitored on a fixed 20\% internal hold-out subset) selects the final model via the Challenge metric. Each training segment is a uniform random crop (or center padding if shorter) of length 4096 samples. The full implementation, including model construction, data pipeline, and optimization utilities, is based on the \texttt{torch-ECG} framework \cite{torch_ecg_paper}.
 
 
 \section{Results}
@@ -395,13 +392,13 @@ where $p_m = \max(p - m, 0),$ $(\gamma_{+},\gamma_{-})=(1,4)$ and margin $\delta
 
 % almost finished
 
-The Challenge score of our team ``Revenger'' on the hidden validation set was 0.245, ranking 170th among 350 submissions. The score on the internal hold-out of the public training data, the hidden validation score, and the validation ranking are summarized in Table~\ref{tab:scores}.
+The Challenge score of our team ``Revenger'' on the hidden validation set was 0.245, ranking 187th among 373 submissions. The score on the internal hold-out of the public training data, the hidden validation score, and the validation ranking are summarized in Table~\ref{tab:scores}.
 
 \begin{table}[!htp]
 \centering
 \begin{tabular}{r|r|r|r}
-Training & Validation & Test & Ranking \\\hline
-$0.451 \pm 0.005$ & 0.245 & TBA & 179~/~364 \\\hline
+Training          & Validation & Test & Ranking   \\ \hline
+$0.451 \pm 0.005$ & 0.245      & TBA  & 187~/~373 \\ \hline
 \end{tabular}
 \caption{Challenge scores for our submitted entries (team ``Revenger''). Training: internal hold-out mean $\pm$ std over repeated runs. Validation: best among 10 validation submissions. Test: to be announced. Ranking: position on the hidden validation leaderboard.}
 \label{tab:scores}
