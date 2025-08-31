@@ -38,8 +38,8 @@
   labelsep=0.4em
 }
 
-\setlength{\abovedisplayskip}{3pt plus 1pt minus 1pt}
-\setlength{\belowdisplayskip}{3pt plus 1pt minus 1pt}
+\setlength{\abovedisplayskip}{1.5pt plus 1pt minus 1pt}
+\setlength{\belowdisplayskip}{1.5pt plus 1pt minus 1pt}
 
 \graphicspath{{images/}} % Directory in which figures are stored
 
@@ -70,8 +70,8 @@
 % add conference banner
 \AddToShipoutPictureFG*{%
   \AtPageLowerLeft{%
-    \hspace{0.82em}
-    \raisebox{0.2ex}{\includegraphics[width=0.16\textwidth]{cinc2025-banner.png}}
+    \hspace{0.77em}
+    \raisebox{0.2ex}{\includegraphics[width=0.147\textwidth]{cinc2025-banner.png}}
   }
 }
 
@@ -96,7 +96,7 @@ boxshade=plain
 %	TITLE AND AUTHOR NAME
 %----------------------------------------------------------------------------------------
 %
-{\includegraphics[scale=0.401]{logo_cau_science.png}} % University/lab logo
+{\includegraphics[scale=0.385]{logo_cau_science.png}} % University/lab logo
 {
 {\bf \fontsize{17pt}{17pt} \selectfont Reliability-Aware Hierarchical Learning for Chagas Detection from ECG under Expert Label Scarcity}
 } % Poster title
@@ -107,7 +107,7 @@ $^2${\it Tianjin Medical University} \\
 \vspace{0.2cm}
 {\Large \bf{The George B. Moody PhysioNet Challenge 2025}, ~~~\bf{Team Revenger}}
 }
-{\includegraphics[scale=0.101]{logo_tmu.jpeg}}
+{\includegraphics[scale=0.097]{logo_tmu.jpeg}}
 
 
 \newif\ifcoloredtext
@@ -120,40 +120,34 @@ $^2${\it Tianjin Medical University} \\
 %	INTRODUCTION & CHALLENGE CONTEXT
 %----------------------------------------------------------------------------------------
 
-\headerbox{Proposed Reliability-Aware Framework}{name=introduction, column=0, row=0, span=3}{
+\headerbox{Framework Summary \& Key Components}{name=introduction, column=0, row=0, span=3}{
 
 \begin{itemize}
-\item {\bf Team Revenger – PhysioNet Challenge 2025}: ECG-based Chagas cardiomyopathy screening in resource-limited settings
-\item {\bf Challenge objective}: Maximize positive case retrieval under 5\% prevalence constraint for scalable screening
-\item {\bf Key challenge}: Severe class imbalance ($\sim$2\% positives) + expert label scarcity (0.2\% expert-confirmed)
-\item {\bf Our approach}: Reliability-aware hierarchical learning prioritizing expert-confirmed over self-reported labels
+\item We propose a \textbf{reliability-aware hierarchical framework} for ECG-based Chagas screening under scarce and noisy labels. The framework comprises three coordinated components: (1) provenance‑stratified label smoothing, (2) moderated source-specific upsampling, and (3) a lightweight variable‑length bottleneck ResNet classifier.
+\item The supervision design assigns sharp targets to expert‑confirmed positives, softened targets to self‑reported samples, and mild smoothing to non‑endemic negatives, while distinct upsampling factors amplify scarce reliable positives without collapsing cohort diversity.
+\item The encoder stacks 4 bottleneck residual blocks with a global squeeze‑and‑excitation module and global max pooling to handle variable-length inputs; training couples reliability‑coded targets with an asymmetric loss to concentrate learning on hard positives amid severe class imbalance.
 \end{itemize}
-
 }
 
 %----------------------------------------------------------------------------------------
-%	DATA & LABEL PROVENANCE
+%	DATA
 %----------------------------------------------------------------------------------------
 
-\headerbox{Data \& Label Provenance \& Hierarchical Supervision}{name=data, column=0, row=1, span=2, below=introduction}{
-
-Three ECG datasets with heterogeneous label reliability and Chagas prevalence:
-
-\begin{center}
-\begin{tabular}{r|lll|ll}
-\toprule
-Dataset & \multicolumn{1}{c}{N} & \multicolumn{1}{c}{Chagas \%} & Label source & Upsample factor & Label smooth \\
-\midrule
-SaMi-Trop   & 1,631     & 100 \%    & expert-confirmed  & 12           & 0.0 \\
-CODE-15\%   & 345,779   & 1.795 \%      & self-reported     & 3              & 0.6 \\
-PTB-XL      & 21,799    & 0 \%      & N/A (non-endemic) & $\backslash$ & 0.2 \\
-\bottomrule
-\end{tabular}
-\end{center}
+\headerbox{Dataset Preparation}{name=data, column=0, row=1, span=1, below=introduction}{
 
 \begin{itemize}
-\item {\bf Preprocessing}: Resampled to 400 Hz, bandpass filtered (0.5–45 Hz), z-score normalized
-\item {\bf Challenge}: Model must learn from heterogeneous label quality and extreme class imbalance
+\item \textbf{Sampling}: All 12-lead ECGs uniformly resampled to 400 Hz.
+\item \textbf{Filtering}: Butterworth bandpass 0.5–45 Hz to suppress baseline wander + high-frequency noise.
+\item \textbf{Normalization}: Per-record z-score
+\begingroup
+\setlength{\abovedisplayskip}{2pt}  % 上间距
+\setlength{\belowdisplayskip}{2pt}  % 下间距
+\[
+\tilde{\mathbf{x}} = \frac{\mathbf{x} - \boldsymbol{\mu}_{\mathbf{x}}}{\boldsymbol{\sigma}_{\mathbf{x}}}
+\]
+\endgroup
+to zero mean, unit variance.
+\item \textbf{Exclusion criteria}: Discard recordings $<1{,}200$ samples ($<3$ s @ 400 Hz) to ensure enough cardiac cycles.
 \end{itemize}
 
 }
@@ -162,35 +156,49 @@ PTB-XL      & 21,799    & 0 \%      & N/A (non-endemic) & $\backslash$ & 0.2 \\
 %	RELIABILITY-AWARE SUPERVISION
 %----------------------------------------------------------------------------------------
 
-\headerbox{Reliability-Aware Supervision}{name=supervision, column=2, row=1, span=1, below=introduction}{
+\headerbox{Reliability-Aware Supervision}{name=supervision, column=1, row=1, span=2, below=introduction}{
 
-{\bf Label Smoothing \& Upsampling Strategy}
+% Three ECG datasets with heterogeneous label reliability and Chagas prevalence:
 
-Hierarchical supervision encoding source reliability through stratified label smoothing:
-\[
-\text{\bf Formula:} ~~ \tilde{\mathbf{y}} = (1 - \varepsilon) \cdot \mathbf{y} + \frac{\varepsilon}{C} \cdot \mathbf{1}
-\]
-Where smoothing factor $\varepsilon$ depends on reliability:
-\begin{itemize}
-\item SaMi positives: $\varepsilon = 0.0$ (max trust)
-\item CODE-15\% samples: $\varepsilon = 0.6$ (uncertainty)  
-\item PTB-XL negatives: $\varepsilon = 0.2$ (mild regularization)
-\end{itemize}
+Hierarchical supervision: source reliability levels (expert > self-report > non-endemic negatives) $\longrightarrow$ calibrated label smoothing ($\varepsilon$) + moderated upsampling.
 
-\vspace{0.3cm}
+\vspace{-1ex}
+% {\smaller[1]
 \begin{center}
-\begin{tabular}{ccc}
+\begin{tabular}{rlllllll}
 \toprule
-\multicolumn{2}{c}{Upsample factor} & \multirow{2}{*}{Score} \\
-\cmidrule(lr){1-2}
-CODE & SaMi & \\
+\multirow{2}{*}{Dataset} & \multirow{2}{*}{Size} & \multirow{2}{*}{Chagas \%} & \multirow{2}{*}{Provenance} & \multirow{2}{*}{Up $\times$} & \multirow{2}{*}{$\varepsilon$} & \multicolumn{2}{c}{Smoothed Targets} \\ \cmidrule(lr){7-8}
+& & & & & & negative & positive \\
 \midrule
-3 & 12    & \textbf{0.245} \\
-3 & 7     & 0.212 \\
-10 & 120   & 0.210 \\
+SaMi-Trop   & 1,631     & 100 \%    & expert-confirmed  & $\times$ 12 & 0.0 & N/A           & $[0,\,1]$     \\
+CODE-15\%   & 345,779   & 1.795 \%  & self-reported     & $\times$ 3  & 0.6 & $[0.7,\,0.3]$ & $[0.3,\,0.7]$ \\
+PTB-XL      & 21,799    & 0 \%      & non-endemic (neg) & $\times$ 1  & 0.2 & $[0.9,\,0.1]$ & N/A           \\
 \bottomrule
 \end{tabular}
 \end{center}
+% }
+\vspace{-1ex}
+
+Label smoothing (binary, $C=2$): $\tilde{\mathbf{y}} = (1 - \varepsilon) \cdot {\mathbf{y}} + \frac{\varepsilon}{C} \cdot {\mathbf{1}}$.
+
+\begin{itemize}
+% \item Reliability levels: expert (sharp, high upsampling) > self-report (soft, moderate) > non-endemic negatives (mild).
+\item Purpose: reduce overconfident gradients for noisier self-reports while preserving expert signal.
+% \item Upsampling balance: (CODE-15\% $\times$3, SaMi-Trop $\times$12) maximized hidden score; aggressive (10,120) overfit / degraded generalization.
+% \item PTB-XL adds negative morphology diversity; mild smoothing (0.2) regularizes the decision boundary.
+% \item Interaction: provenance-aware smoothing complements asymmetric loss (ASL) by encoding prior trust.
+\item Benefit: replaces ad-hoc class weights with structured priors; stabilizes early training variance.
+% \item Limitation: $\varepsilon$ values are manually fixed—do not capture intra-source heterogeneity (future: learn instance reliability).
+\item Complementarity: provenance-based smoothing reduces label noise impact; ASL (asymmetric loss) focuses capacity on hard positives:
+\begingroup
+\setlength{\abovedisplayskip}{2pt}  % 上间距
+\setlength{\belowdisplayskip}{2pt}  % 下间距
+\[
+\operatorname{ASL} = -y \cdot (1-p)^{\gamma_{+}} \log(p) - (1-y) \cdot (p_m)^{\gamma_{-}} \log(1-p_m)
+\]
+\endgroup
+where $p$ is the predicted probability of the positive class, $y$ is the (smoothed) positive-class target probability, $p_m = \max(p - m, 0),$ $(\gamma_{+},\gamma_{-})=(1,4)$ and margin $m=0.05$.
+\end{itemize}
 
 }
 
@@ -198,7 +206,7 @@ CODE & SaMi & \\
 %	MODEL ARCHITECTURE
 %----------------------------------------------------------------------------------------
 
-\headerbox{Model Architecture}{name=architecture, column=0, row=2, span=1, below=data}{
+\headerbox{Model Architecture}{name=model, column=0, row=2, span=1, below=data}{
 
 {\bf Enhanced 1D ResNet with SE Modules}
 
@@ -213,41 +221,62 @@ CODE & SaMi & \\
 \vspace{-2ex}
 
 \begin{itemize}
+\item {\bf Stem}: Conv1d (kernel 15, stride 1, 64 channels) followed by BN and ReLU, providing initial local morphology modeling.
 \item {\bf Bottleneck blocks}: 1-15-1 convolutions, expansion factor 4, stride 4 downsampling
-\item {\bf Global SE}: Channel attention, reduction ratio 8 for temporal feature recalibration  
-\item {\bf Variable-length inputs}: Global MaxPool enables inference on ECGs of any duration
+\item {\bf Global SE}: Channel attention, reduction ratio 8 for temporal feature recalibration.
+\item {\bf Variable-length inputs}: Global MaxPool enables inference on ECGs of any duration.
+% \item {\bf Classification MLP head}: Hidden FC layer ($1280 \to 1024$) with non-linear activation and dropout (rate 0.2), followed by a final linear layer ($1024 \to 2$) producing class logits.
 \end{itemize}
 
 }
 
 %----------------------------------------------------------------------------------------
-%	TRAINING & OPTIMIZATION
+%	UPSAMPLING STRATEGY SELECTION
 %----------------------------------------------------------------------------------------
 
-\headerbox{Training \& Optimization}{name=training, column=1, row=2, span=1, below=data}{
+\headerbox{Upsample Strategy Selection}{name=upsampling, column=1, row=2, span=1, below=supervision}{
+\small
+% \textbf{Goal:} Amplify scarce reliable positives without collapsing inter‑cohort diversity.
 
-% {\bf Asymmetric Loss \& Optimization Setup}
+\begin{center}
+\input{tables/upsampling_schemes}
+\end{center}
+\vspace{-1ex}
+$^\dagger$ obtained during the unofficial phase.
 
 \begin{itemize}
-\item {\bf Asymmetric Loss}: $L = -y(1-p)^{\gamma_{+}} \log(p) - (1-y)(p_m)^{\gamma_{-}} \log(1-p_m)$
-\item Parameters: $(\gamma_{+},\gamma_{-})=(1,4)$, margin $\delta=0.05$
-\item {\bf Optimizer}: AdamW
-\item {\bf LR Scheduler}: OneCycle
-\item {\bf LR}: $1 \times 10^{-4}$ initial, $6 \times 10^{-4}$ peak
-\item {\bf Training}: 30 epochs, batch size 128, weight decay $1 \times 10^{-2}$
-\item {\bf Input}: 4,096 samples (uniform crop/center trim)
-\item {\bf Early stopping}: Challenge score on 20\% internal hold-out subset
+\item Moderate replication outperformed both no upsampling and extreme factors.
+\item Extreme factors increased memorization and reduced hidden generalization.
+% \item PTB-XL (negatives only) kept at ×1 to avoid further skew toward the negative class.
 \end{itemize}
 
+}
+
+%----------------------------------------------------------------------------------------
+%	TRAINING CONFIGURATION
+%----------------------------------------------------------------------------------------
+
+\headerbox{Training Configuration}{name=training, column=2, row=2, span=1, below=supervision}{
+
+\begin{itemize}[leftmargin=8pt,itemsep=2pt,topsep=2pt]
+\item \textbf{Optimizer \& scheduler}: AdamW (weight decay $1\times 10^{-2}$) with OneCycle LR over 30 epochs: base $1\times10^{-4} \rightarrow$ peak $6\times10^{-4}$ (early phase) $\rightarrow$ anneal to $\approx 1\times10^{-6}$.
+% \item \textbf{Batch / epochs / early stop}: Batch size 128; max 30 epochs; early stopping (patience 10) on a fixed 20\% hold-out subset using the Challenge metric.
+\item \textbf{Batch size}: 128.
+\item \textbf{Epochs}: Max 30 epochs.
+\item \textbf{Early stop}: Patience 10 epochs, evaluated on a fixed 20\% hold-out subset using the Challenge metric.
+\item \textbf{Training segments}: Uniform random crop (or center padding if shorter) of 4{,}096 samples.
+\item \textbf{Implementation}: PyTorch + \texttt{torch-ECG} framework
+
+\end{itemize}
 }
 
 %----------------------------------------------------------------------------------------
 %	RESULTS
 %----------------------------------------------------------------------------------------
 
-\headerbox{Results}{name=results, column=0, row=3, span=3, below=architecture}{
+\headerbox{Results}{name=results, column=1, row=3, span=2, below=upsampling}{
 
-{\bf Challenge Performance \& Analysis}
+% {\bf Challenge Performance \& Analysis}
 
 \begin{center}
 \begin{tabular}{r|r|r|r}
@@ -257,82 +286,36 @@ $0.451 \pm 0.005$ & 0.245 & 179/364 & TBA \\
 \hline
 \end{tabular}
 \end{center}
-
-\begin{itemize}
-\item {\bf Hidden validation score}: 0.245 (Challenge metric: TPR at 5\% prevalence constraint)
-\item {\bf Performance gap}: Internal vs. hidden suggests domain shift or overfitting to public data
-\item {\bf Key insight}: Reliability-aware supervision stabilizes learning under noisy labels more effectively than architectural complexity alone
-\end{itemize}
+\vspace{-1ex}
+The rankings are based on the hidden validation set. Results on the public training data (more specifically, the hold-out subset) are also provided for reference.
 
 }
 
 %----------------------------------------------------------------------------------------
-%	DISCUSSION & INSIGHTS
+%	DISCUSSION & Limitations
 %----------------------------------------------------------------------------------------
 
-\headerbox{Discussion \& Insights}{name=discussion, column=0, row=4, span=2, below=results}{
-
-{\bf How does the approach provide insight into the Challenge issues?}
+\headerbox{Discussion \& Limitations}{name=discussion, column=0, row=4, span=3, below=results}{
 
 \begin{itemize}
-\item {\bf Label provenance modeling}: Explicitly encoding expert vs. self-reported reliability addresses core challenge of heterogeneous label quality in multi-source ECG datasets
-\item {\bf Hierarchical supervision}: Dynamic smoothing factors prevent overconfident gradients on noisy labels while preserving sharp supervision on expert-confirmed cases
-\item {\bf Scalability}: Framework aligns with clinical reality—expert labels are scarce but high-quality; self-reported labels are abundant but uncertain
-\item {\bf Performance gap analysis}: Static reliability weights may not capture within-source label heterogeneity; adaptive weighting could improve generalization
+\item Our reliability-aware hierarchical framework provides a lightweight, supervision-centric route to Chagas ECG screening under scarce positives and mixed label noise, without relying on heavy architectures or pretraining.
+\item The generalization gap (internal hold-out vs hidden validation) suggests residual distribution shift (cohort composition/prevalence) and under-adaptation of our fixed supervision scheme.
+\item Static supervision limits adaptation: (i) Fixed smoothing factors ($\varepsilon$) capture only coarse provenance, missing intra-source label quality variation; (ii) dataset-level upsampling with fixed multipliers ignores evolving model confidence and per-instance difficulty.
+\item \textbf{Future directions}:
+\begin{itemize}
+\item Adaptive supervision: jointly learn instance-level reliability weights and adjust positive sampling (curriculum/difficulty- or confidence-aware, hard positive mining, etc.) instead of fixed smoothing factors $\varepsilon$ and static upsampling multipliers.
+\item Augmentation \& synthesis: CutMix, mixup variants, temporal warping, and class-conditional synthesis to expand minority morphology diversity.
+\item Multi-task \& pretraining: leverage arrhythmia / morphology labels; self-supervised ECG representation learning before supervised fine-tuning.
+\end{itemize}
 \end{itemize}
 
 }
-
-%----------------------------------------------------------------------------------------
-%	FUTURE WORK
-%----------------------------------------------------------------------------------------
-
-\headerbox{Future Work}{name=future, column=2, row=4, span=1, below=results}{
-
-{\bf Adaptive Supervision Framework}
-
-\begin{itemize}
-\item {\bf Dynamic reliability}: Learn instance-specific confidence scores vs. static smoothing factors
-\item {\bf Adaptive sampling}: Confidence-aware upsampling responding to model evolution during training
-\item {\bf Data augmentation}: CutMix, SMOTE for positive sample diversification
-\item {\bf Multi-task learning}: Leverage auxiliary arrhythmia labels for enhanced feature representation
-\item {\bf Self-supervised pre-training}: Large-scale unlabeled ECG data for transferable representations
-\end{itemize}
-
-}
-
-%----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS
-%----------------------------------------------------------------------------------------
-
-% \headerbox{Acknowledgements}{name=acknowledgements, column=0, row=5, span=3, below=discussion}{
-
-% We thank Professor {\bf Deren Han} from the School of Mathematical Sciences, Beihang University for providing GPU servers. We acknowledge the PhysioNet Challenge organizers and the contributing datasets.
-
-% }
-
-%----------------------------------------------------------------------------------------
-%	REFERENCES
-%----------------------------------------------------------------------------------------
-
-% \headerbox{References}{name=references, column=0, row=6, span=3, below=acknowledgements}{
-
-% \begin{thebibliography}{9}
-% \bibitem{goldberger2000} Goldberger AL, et al. PhysioBank, PhysioToolkit, and PhysioNet. {\it Circulation} 2000;101(23):e215-e220.
-% \bibitem{ribeiro2020} Ribeiro AH, et al. Automatic diagnosis of the 12-lead ECG using a deep neural network. {\it Nat Commun} 2020;11:1760.
-% \bibitem{hu2018} Hu J, et al. Squeeze-and-Excitation Networks. {\it CVPR} 2018:7132-7141.
-% \bibitem{ridnik2021} Ridnik T, et al. Asymmetric Loss For Multi-Label Classification. {\it ICCV} 2021:82-91.
-% \bibitem{yun2019} Yun S, et al. CutMix: Regularization Strategy to Train Strong Classifiers. {\it ICCV} 2019:6023-6032.
-% \bibitem{chawla2002} Chawla NV, et al. SMOTE: Synthetic Minority Oversampling Technique. {\it JAIR} 2002;16:321-357.
-% \end{thebibliography}
-
-% }
 
 %----------------------------------------------------------------------------------------
 %	FOOTER
 %----------------------------------------------------------------------------------------
 
-\headerbox{}{name=foottext, column=0, span=3, below=future, textborder=none, headerborder=none, boxheaderheight=0pt}{
+\headerbox{}{name=foottext, column=0, span=3, below=discussion, textborder=none, headerborder=none, boxheaderheight=0pt}{
 \hfill \small \textit{Code, configs, etc. are available at https://github.com/wenh06/cinc2025, and is based on https://github.com/DeepPSP/torch\_ecg.}
 }
 

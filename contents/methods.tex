@@ -51,21 +51,9 @@ where $\varepsilon$ is the smoothing factor which depends on the reliability lev
 Severe class imbalance was mitigated by upsampling positives during training: positive samples from CODE-15\% were upsampled by a factor of 3, and those from SaMi-Trop by 12. No upsampling was applied to PTB-XL, which contains no positives. We chose these factors after reviewing hidden validation scores from multiple submissions, as shown in Table~\ref{tab:upsampling_schemes}.
 \begin{table}[!htbp]
 \centering
-\begin{tabular}{ccc}
-\toprule
-\multicolumn{2}{c}{Upsample factor} & \multirow{2}{*}{Challenge score} \\
-\cmidrule(lr){1-2}
-CODE-15\% &  SaMi-Trop & \\
-\midrule
-- & -     & 0.239$^*$ \\
-3 & 7      & 0.212 \\
-3 & 12    & \textbf{0.245} \\
-10 & 120   & 0.210 \\
-6 & 36     & 0.221 \\
-\bottomrule
-\end{tabular}
+\input{tables/upsampling_schemes}
 \caption{Representative upsampling schemes and corresponding Challenge scores on the hidden validation set. The model and training strategies used were the same. “-” indicates no upsampling.\\
-$^*$ obtained during the unofficial phase.
+$^\dagger$ obtained during the unofficial phase.
 }
 \label{tab:upsampling_schemes}
 \end{table}
@@ -76,7 +64,7 @@ Smoothed labels and upsampling strategies for each dataset are summarized in Tab
 
 \begin{table}[!htp]
 \centering
-\input{tables/upsampling_schemes}
+\input{tables/hierarchical_supervision}
 \caption{Smoothed labels (computed from Eq.~\ref{eq:label_smoothing}) and upsampling strategies for each dataset.}
 \label{tab:augmentation}
 \end{table}
@@ -114,4 +102,4 @@ L = -y \cdot (1-p)^{\gamma_{+}} \log(p) \\
 \phantom{L = } - (1-y) \cdot (p_m)^{\gamma_{-}} \log(1-p_m),
 \end{multlined}
 \end{equation}
-where $y$ is the (smoothed) positive-class target probability, $p_m = \max(p - m, 0),$ $(\gamma_{+},\gamma_{-})=(1,4)$ and margin $m=0.05$. We train for 30 epochs with batch size 128 using the AdamW optimizer (initial learning rate $1\times10^{-4}$, peak $6\times10^{-4}$ under a OneCycle scheduler, weight decay $1\times10^{-2}$). Early stopping (patience 10 epochs, monitored on a fixed 20\% internal hold-out subset) selects the final model via the Challenge metric. Each training segment is a uniform random crop (or center trim if shorter) of length 4096 samples. The full implementation, including model construction, data pipeline, and optimization utilities, is based on the \texttt{torch-ECG} framework \cite{torch_ecg_paper}.
+where $y$ is the (smoothed) positive-class target probability, $p_m = \max(p - m, 0),$ $(\gamma_{+},\gamma_{-})=(1,4)$ and margin $m=0.05$. We train for 30 epochs with batch size 128 using the AdamW optimizer (initial learning rate $1\times10^{-4}$, peak $6\times10^{-4}$ under a OneCycle scheduler, weight decay $1\times10^{-2}$). Early stopping (patience 10 epochs, monitored on a fixed 20\% internal hold-out subset) selects the final model via the Challenge metric. Each training segment is a uniform random crop (or center padding if shorter) of length 4096 samples. The full implementation, including model construction, data pipeline, and optimization utilities, is based on the \texttt{torch-ECG} framework \cite{torch_ecg_paper}.
