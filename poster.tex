@@ -27,6 +27,7 @@
 \usepackage{eso-pic}
 \usepackage{enumitem}
 \usepackage{hyperref}
+\usepackage{fix-cm}
 
 \setlist[itemize]{
   itemsep=1.5pt,
@@ -97,7 +98,7 @@ boxshade=plain
 %
 {\includegraphics[scale=0.401]{logo_cau_science.png}} % University/lab logo
 {
-{\bf \fontsize{19pt}{19pt} \selectfont Reliability-Aware Hierarchical Learning for Chagas Detection from ECG under Expert Label Scarcity}
+{\bf \fontsize{17pt}{17pt} \selectfont Reliability-Aware Hierarchical Learning for Chagas Detection from ECG under Expert Label Scarcity}
 } % Poster title
 {\vspace{0.3em} \smaller Hao WEN$^1$, Jingsu KANG$^2$  \\  % Author names
 
@@ -134,18 +135,18 @@ $^2${\it Tianjin Medical University} \\
 %	DATA & LABEL PROVENANCE
 %----------------------------------------------------------------------------------------
 
-\headerbox{Data \& Label Provenance}{name=data, column=0, row=1, span=2, below=introduction}{
+\headerbox{Data \& Label Provenance \& Hierarchical Supervision}{name=data, column=0, row=1, span=2, below=introduction}{
 
 Three ECG datasets with heterogeneous label reliability and Chagas prevalence:
 
 \begin{center}
-\begin{tabular}{rlll}
+\begin{tabular}{r|lll|ll}
 \toprule
-Dataset & \multicolumn{1}{c}{N} & \multicolumn{1}{c}{Chagas \%} & Label source \\
+Dataset & \multicolumn{1}{c}{N} & \multicolumn{1}{c}{Chagas \%} & Label source & Upsample factor & Label smooth \\
 \midrule
-SaMi-Trop   & 1,631     & 100.0 \%    & expert-confirmed \\
-CODE-15\%   & 345,779   & 1.8 \%      & self-reported \\
-PTB-XL      & 21,799    & 0.0 \%      & N/A (non-endemic) \\
+SaMi-Trop   & 1,631     & 100 \%    & expert-confirmed  & 12           & 0.0 \\
+CODE-15\%   & 345,779   & 1.795 \%      & self-reported     & 3              & 0.6 \\
+PTB-XL      & 21,799    & 0 \%      & N/A (non-endemic) & $\backslash$ & 0.2 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -201,11 +202,15 @@ CODE & SaMi & \\
 
 {\bf Enhanced 1D ResNet with SE Modules}
 
+\vspace{-3.5ex}
+
 \begin{center}
 \resizebox{1.03\linewidth}{!}{%
   \input{tikz_plots/resnet_nature_comm_bottle_neck}
 }
 \end{center}
+
+\vspace{-2ex}
 
 \begin{itemize}
 \item {\bf Bottleneck blocks}: 1-15-1 convolutions, expansion factor 4, stride 4 downsampling

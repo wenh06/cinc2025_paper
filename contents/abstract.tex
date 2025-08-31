@@ -18,7 +18,7 @@ Aim: We present a reliability-aware hierarchical learning framework for ECG-base
 
 Methods: The 12-lead ECGs were resampled to 400 Hz, bandpass filtered (0.5–45 Hz), and z-score normalized. We used a ResNet model integrated with squeeze-and-excitation (SE) modules for binary classification. To address severe class imbalance and the scarcity of expert-confirmed labels, we applied stratified upsampling and reliability-weighted label smoothing to prioritize expert-confirmed positives over self-reported ones. Model training used an asymmetric loss to further penalize false negatives and was optimized with AdamW and a OneCycle learning rate scheduler. Model selection was based on the Challenge score from an internal hold-out subset.
 
-Results: On the hidden validation set, our method received a Challenge score of 0.245 (rank 179~/~364). In cross-validation on the public training data, our approach achieved a Challenge score of 0.451. 
+Results: On the hidden validation set, our method received a Challenge score of 0.245 (rank 187~/~373). In cross-validation on the public training data, our approach achieved a Challenge score of 0.451. 
 
 Conclusion: The proposed method shows effective performance for ECG-based Chagas screening, and highlights potential for improving detection accuracy and reliability in resource-limited scenarios.
 
