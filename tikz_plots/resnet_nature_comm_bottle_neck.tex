@@ -35,7 +35,7 @@
 
 % ================= Left (overall vertical path) =================
 \node[stem] (input) {Input \\ (12$\times$L)};
-\node[stem, below=of input] (stem) {Stem \\ Conv ks=15 \\ BN + ReLU \\ 64 Ch};
+\node[stem, below=of input] (stem) {Stem \\ Conv ks=15, 64 Ch \\ BN + ReLU};
 
 % Compressed single bottleneck block (represents 4 stacked blocks)
 % \node[block, below=of stem] (bottleneck) {$4 \times$ Bottleneck Block \\ ks: 1--15--1, stride: 1--4--1 \\ Ch: $512 \to 768 \to 1024 \to 1280$};
@@ -72,7 +72,7 @@
 
 % ================= Right (expanded single bottleneck internals) =================
 % Anchor for expansion (to the right of overall bottleneck block)
-\coordinate (expandAnchor) at ($(input.east)+(45mm,0)$);
+\coordinate (expandAnchor) at ($(input.east)+(50mm,0.2)$);
 
 \node[layer, below=-0.5mm of expandAnchor] (c1) {Conv ks=1};
 \node[below right=-1mm and 8mm of c1.south] {reduce};

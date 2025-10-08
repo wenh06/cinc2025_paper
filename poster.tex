@@ -210,18 +210,18 @@ where $p$ is the predicted probability of the positive class, $y$ is the (smooth
 
 {\bf Enhanced 1D ResNet with SE Modules}
 
-\vspace{-3.5ex}
+\vspace{-2.5ex}
 
 \begin{center}
 \resizebox{1.03\linewidth}{!}{%
-  \input{tikz_plots/resnet_nature_comm_bottle_neck}
+\input{tikz_plots/resnet_nature_comm_bottle_neck}
 }
 \end{center}
 
-\vspace{-2ex}
+\vspace{-0.5ex}
 
 \begin{itemize}
-\item {\bf Stem}: Conv1d (kernel 15, stride 1, 64 channels) followed by BN and ReLU, providing initial local morphology modeling.
+\item {\bf Stem}: Conv1d (kernel 15, stride 1, 64 output channels) followed by BN and ReLU, providing initial local morphology modeling.
 \item {\bf Bottleneck blocks}: 1-15-1 convolutions, expansion factor 4, stride 4 downsampling
 \item {\bf Global SE}: Channel attention, reduction ratio 8 for temporal feature recalibration.
 \item {\bf Variable-length inputs}: Global MaxPool enables inference on ECGs of any duration.

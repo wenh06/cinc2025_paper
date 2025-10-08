@@ -29,9 +29,11 @@ where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_{\mathbf{x}}$ a
 
 \begin{figure*}[!t]
 \centering
+\adjustbox{width=0.70\linewidth}{
 \input{tikz_plots/resnet_nature_comm_bottle_neck}
-\caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size (ks) 15, 64 channels (Ch), Batch Normalization (BN), ReLU) followed by four bottleneck residual blocks, a global squeeze-and-excitation (SE) module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded channels.
-Right: internal bottleneck structure (1--15--1 pointwise--temporal--pointwise). The middle convolution of kernel size 15 uses a stride of 4 for temporal downsampling; kernel size 1 convolutions reduce and then expand channels, and a projection convolution (kernel size 1, stride 4) aligns resolution and width for the residual path. For clarity, dropout layers present in the implementation are omitted. Abbreviations: ks kernel size; Ch channels; BN Batch Normalization; SE squeeze-and-excitation; MLP multi-layer perceptron.}
+}
+\caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size 15, 64 output channels, Batch Normalization, ReLU) followed by four bottleneck residual blocks, a global SE module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded channels.
+Right: internal bottleneck structure. The middle convolution of kernel size 15 uses a stride of 4 for temporal downsampling; kernel size 1 convolutions reduce and then expand channels, and a projection convolution (kernel size 1, stride 4) aligns resolution and width for the residual path. For clarity, dropout layers present in the implementation are omitted. Abbreviations: ks kernel size; Ch channels; BN Batch Normalization; SE squeeze-and-excitation; MLP multi-layer perceptron.}
 \label{fig:model}
 \end{figure*}
 
@@ -94,7 +96,7 @@ The overall model architecture is illustrated in Fig.~\ref{fig:model}.
 
 % almost finished
 
-We employed an asymmetric loss (ASL) \cite{ridnik2021asymmetric_loss} to complement the reliability-aware label smoothing strategy, jointly addressing the challenges of severe class imbalance. Let ${\mathbf{z}} = (z_0, z_1)$ denote the logits and $p=\operatorname{softmax}({\mathbf{z}})_1$ the predicted probability of the Chagas-positive class. The ASL is defined in Eq.~\ref{eq:asl} with separate focusing parameters for positives and negatives and a clipped negative probability term:
+We employed asymmetric loss (ASL) \cite{ridnik2021asymmetric_loss} to complement the reliability-aware label smoothing strategy, jointly addressing the challenges of severe class imbalance. Let ${\mathbf{z}} = (z_0, z_1)$ denote the logits and $p=\operatorname{softmax}({\mathbf{z}})_1$ the predicted probability of the positive class. The ASL is defined in Eq.~\ref{eq:asl} with separate focusing parameters for positives and negatives and a clipped negative probability term:
 \begin{equation}
 \label{eq:asl}
 \begin{multlined}

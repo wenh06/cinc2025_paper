@@ -2,23 +2,11 @@
 
 % almost finished
 
-% --------------------------------------------------
-% Unofficial phase version:
-
-% Aim: This paper introduces a reliability-aware hierarchical learning framework for automated Chagas cardiomyopathy screening from electrocardiograms (ECGs), serving as the ``Revenger'' team's solution to the George B. Moody PhysioNet Challenge 2025.
-
-% Methods: ECGs were preprocessed through resampling to 400 Hz, 0.5-45 Hz Butterworth bandpass filtering, and z-score normalization to zero mean and unit variance. We implemented a convolutional neural network (CNN) based on the ResNet architecture with integrated squeeze-and-excitation (SE) modules for binary prediction (Chagas negative/positive). The public training data are highly imbalanced, with only approximately 2\% positive samples and an even larger scarcity (0.2\%) of expert-labeled samples, where the rest are patient self-reported. We employed a hierarchical upsampling and label smoothing scheme that prioritizes expert-validated samples over patient-reported ones. Expert-validated samples received a higher upsampling rate and a lower label smoothing factor (indicating higher reliability). Our model was optimized using asymmetric loss to further penalize false negatives, and with Adam optimizer and \texttt{OneCycle} learning rate scheduler for rapid convergence. A demographic feature-based stratified split was conducted to reserve 20\% of the data for model selection based on the challenge score: maximizing true positive rate while keeping positive predictions under 5\% prevalence.
-
-% Results: Our approach received a challenge score of 0.290 (Ranking: 76) on the hidden validation set. In our internal evaluation, the highest score was 0.456.
-
-% Conclusion: The proposed method establishes an effective foundation for automated Chagas screening through ECG analysis in resource-limited settings, yet presents clear opportunities for refinement to enhance detection performance and clinical applicability.
-% --------------------------------------------------
-
 Aim: We present a reliability-aware hierarchical learning framework for ECG-based Chagas cardiomyopathy screening in the George B. Moody PhysioNet Challenge 2025 by Team Revenger, aiming to maximize positive case retrieval under prevalence constraints.
 
 Methods: The 12-lead ECGs were resampled to 400 Hz, bandpass filtered (0.5–45 Hz), and z-score normalized. We used a ResNet model integrated with squeeze-and-excitation (SE) modules for binary classification. To address severe class imbalance and the scarcity of expert-confirmed labels, we applied stratified upsampling and reliability-weighted label smoothing to prioritize expert-confirmed positives over self-reported ones. Model training used an asymmetric loss to further penalize false negatives and was optimized with AdamW and a OneCycle learning rate scheduler. Model selection was based on the Challenge score from an internal hold-out subset.
 
-Results: On the hidden validation set, our method received a Challenge score of 0.163 (rank 32~/~40). In cross-validation on the public training data, our approach achieved a Challenge score of 0.451. 
+Results: On the official hidden test set, our method received a Challenge score of 0.163, ranking 32nd of 40 eligible teams.
 
 Conclusion: The proposed method demonstrates effective performance for ECG-based Chagas screening, highlighting its potential for improving detection accuracy and reliability in resource-limited scenarios.
 
