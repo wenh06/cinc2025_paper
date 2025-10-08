@@ -46,6 +46,8 @@
 \usepackage{ragged2e} % for '\RaggedRight' macro
 \newcolumntype{L}{>{\RaggedRight}X} % disable full justification
 
+\usepackage{adjustbox}
+
 % \tikzstyle{smallcircleblock} = [circle, draw, text width = 0.7em, text centered]
 
 % \tikzstyle{wideblock} = [rectangle, draw, text width = 6.5em, text centered, rounded corners, inner sep = 7pt, minimum height = 1.0em]
@@ -96,23 +98,11 @@ Jingsu Kang\textsuperscript{2} \\ \ \\
 
 % almost finished
 
-% --------------------------------------------------
-% Unofficial phase version:
-
-% Aim: This paper introduces a reliability-aware hierarchical learning framework for automated Chagas cardiomyopathy screening from electrocardiograms (ECGs), serving as the ``Revenger'' team's solution to the George B. Moody PhysioNet Challenge 2025.
-
-% Methods: ECGs were preprocessed through resampling to 400 Hz, 0.5-45 Hz Butterworth bandpass filtering, and z-score normalization to zero mean and unit variance. We implemented a convolutional neural network (CNN) based on the ResNet architecture with integrated squeeze-and-excitation (SE) modules for binary prediction (Chagas negative/positive). The public training data are highly imbalanced, with only approximately 2\% positive samples and an even larger scarcity (0.2\%) of expert-labeled samples, where the rest are patient self-reported. We employed a hierarchical upsampling and label smoothing scheme that prioritizes expert-validated samples over patient-reported ones. Expert-validated samples received a higher upsampling rate and a lower label smoothing factor (indicating higher reliability). Our model was optimized using asymmetric loss to further penalize false negatives, and with Adam optimizer and \texttt{OneCycle} learning rate scheduler for rapid convergence. A demographic feature-based stratified split was conducted to reserve 20\% of the data for model selection based on the challenge score: maximizing true positive rate while keeping positive predictions under 5\% prevalence.
-
-% Results: Our approach received a challenge score of 0.290 (Ranking: 76) on the hidden validation set. In our internal evaluation, the highest score was 0.456.
-
-% Conclusion: The proposed method establishes an effective foundation for automated Chagas screening through ECG analysis in resource-limited settings, yet presents clear opportunities for refinement to enhance detection performance and clinical applicability.
-% --------------------------------------------------
-
 Aim: We present a reliability-aware hierarchical learning framework for ECG-based Chagas cardiomyopathy screening in the George B. Moody PhysioNet Challenge 2025 by Team Revenger, aiming to maximize positive case retrieval under prevalence constraints.
 
 Methods: The 12-lead ECGs were resampled to 400 Hz, bandpass filtered (0.5–45 Hz), and z-score normalized. We used a ResNet model integrated with squeeze-and-excitation (SE) modules for binary classification. To address severe class imbalance and the scarcity of expert-confirmed labels, we applied stratified upsampling and reliability-weighted label smoothing to prioritize expert-confirmed positives over self-reported ones. Model training used an asymmetric loss to further penalize false negatives and was optimized with AdamW and a OneCycle learning rate scheduler. Model selection was based on the Challenge score from an internal hold-out subset.
 
-Results: On the hidden validation set, our method received a Challenge score of 0.163 (rank 32~/~40). In cross-validation on the public training data, our approach achieved a Challenge score of 0.451.
+Results: On the official hidden test set, our method received a Challenge score of 0.163, ranking 32nd of 40 eligible teams.
 
 Conclusion: The proposed method demonstrates effective performance for ECG-based Chagas screening, highlighting its potential for improving detection accuracy and reliability in resource-limited scenarios.
 
@@ -126,7 +116,7 @@ Conclusion: The proposed method demonstrates effective performance for ECG-based
 
 % almost finished
 
-Addressing underdiagnosis of Chagas disease through scalable ECG-based screening is the focus of the 2025 George B. Moody PhysioNet Challenge \cite{goldberger2000physionet, cinc2025}. Enabled by aggregated multi-cohort ECG datasets \cite{ribeiro2020automatic, Cardoso_2016_Sami-Trop, wagner2020ptb_xl, Nunes_2021_Incidence, Filho_2020_Prognostic}, the Challenge frames a multi-source learning setting with heterogeneous label reliability and severe class imbalance.
+Addressing underdiagnosis of Chagas disease through scalable ECG-based screening is the focus of the 2025 George B. Moody PhysioNet Challenge \cite{goldberger2000physionet, 2025ChallengeCinC, 2025ChallengePreprint}. Enabled by aggregated multi-cohort ECG datasets \cite{ribeiro2020automatic, Cardoso_2016_Sami-Trop, wagner2020ptb_xl, Nunes_2021_Incidence, Filho_2020_Prognostic}, the Challenge frames a multi-source learning setting with heterogeneous label reliability and severe class imbalance.
 
 In this work, we propose a reliability-aware hierarchical framework that prioritizes expert-confirmed labels and mitigates severe class imbalance within a deep ECG model, with optimization aligned to prevalence-constrained sensitivity objectives.
 
@@ -170,6 +160,7 @@ where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_{\mathbf{x}}$ a
 
 \begin{figure*}[!t]
 \centering
+\adjustbox{width=0.70\linewidth}{
 \begin{tikzpicture}[
     % font=\small,
     line width=0.75pt,
@@ -207,7 +198,7 @@ where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_{\mathbf{x}}$ a
 
 % ================= Left (overall vertical path) =================
 \node[stem] (input) {Input \\ (12$\times$L)};
-\node[stem, below=of input] (stem) {Stem \\ Conv ks=15 \\ BN + ReLU \\ 64 Ch};
+\node[stem, below=of input] (stem) {Stem \\ Conv ks=15, 64 Ch \\ BN + ReLU};
 
 % Compressed single bottleneck block (represents 4 stacked blocks)
 % \node[block, below=of stem] (bottleneck) {$4 \times$ Bottleneck Block \\ ks: 1--15--1, stride: 1--4--1 \\ Ch: $512 \to 768 \to 1024 \to 1280$};
@@ -244,7 +235,7 @@ where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_{\mathbf{x}}$ a
 
 % ================= Right (expanded single bottleneck internals) =================
 % Anchor for expansion (to the right of overall bottleneck block)
-\coordinate (expandAnchor) at ($(input.east)+(45mm,0)$);
+\coordinate (expandAnchor) at ($(input.east)+(50mm,0.2)$);
 
 \node[layer, below=-0.5mm of expandAnchor] (c1) {Conv ks=1};
 \node[below right=-1mm and 8mm of c1.south] {reduce};
@@ -293,8 +284,9 @@ where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_{\mathbf{x}}$ a
 
 \end{tikzpicture}
 
-\caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size (ks) 15, 64 channels (Ch), Batch Normalization (BN), ReLU) followed by four bottleneck residual blocks, a global squeeze-and-excitation (SE) module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded channels.
-Right: internal bottleneck structure (1--15--1 pointwise--temporal--pointwise). The middle convolution of kernel size 15 uses a stride of 4 for temporal downsampling; kernel size 1 convolutions reduce and then expand channels, and a projection convolution (kernel size 1, stride 4) aligns resolution and width for the residual path. For clarity, dropout layers present in the implementation are omitted. Abbreviations: ks kernel size; Ch channels; BN Batch Normalization; SE squeeze-and-excitation; MLP multi-layer perceptron.}
+}
+\caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size 15, 64 output channels, Batch Normalization, ReLU) followed by four bottleneck residual blocks, a global SE module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded channels.
+Right: internal bottleneck structure. The middle convolution of kernel size 15 uses a stride of 4 for temporal downsampling; kernel size 1 convolutions reduce and then expand channels, and a projection convolution (kernel size 1, stride 4) aligns resolution and width for the residual path. For clarity, dropout layers present in the implementation are omitted. Abbreviations: ks kernel size; Ch channels; BN Batch Normalization; SE squeeze-and-excitation; MLP multi-layer perceptron.}
 \label{fig:model}
 \end{figure*}
 
@@ -376,7 +368,7 @@ The overall model architecture is illustrated in Fig.~\ref{fig:model}.
 
 % almost finished
 
-We employed an asymmetric loss (ASL) \cite{ridnik2021asymmetric_loss} to complement the reliability-aware label smoothing strategy, jointly addressing the challenges of severe class imbalance. Let ${\mathbf{z}} = (z_0, z_1)$ denote the logits and $p=\operatorname{softmax}({\mathbf{z}})_1$ the predicted probability of the Chagas-positive class. The ASL is defined in Eq.~\ref{eq:asl} with separate focusing parameters for positives and negatives and a clipped negative probability term:
+We employed asymmetric loss (ASL) \cite{ridnik2021asymmetric_loss} to complement the reliability-aware label smoothing strategy, jointly addressing the challenges of severe class imbalance. Let ${\mathbf{z}} = (z_0, z_1)$ denote the logits and $p=\operatorname{softmax}({\mathbf{z}})_1$ the predicted probability of the positive class. The ASL is defined in Eq.~\ref{eq:asl} with separate focusing parameters for positives and negatives and a clipped negative probability term:
 \begin{equation}
 \label{eq:asl}
 \begin{multlined}
@@ -392,17 +384,17 @@ where $y$ is the (smoothed) positive-class target probability, $p_m = \max(p - m
 
 % almost finished
 
-The Challenge score of our team ``Revenger'' on the hidden test set was 0.163, ranking 32nd among 40 teams eligible for rankings. The score on the internal hold-out of the public training data, the hidden validation score, and the validation ranking are summarized in Table~\ref{tab:scores}.
+The Challenge score of our team ``Revenger'' on the hidden test set was 0.163, ranking 32nd among 40 eligible teams. This score and ranking, along with extra scores on the internal hold-out of the public training data, and on the hidden validation set, are summarized in Table~\ref{tab:scores}.
 
 \begin{table}[!htp]
 \centering
 % \input{tables/official_phase_results}
 \begin{tabular}{r|r|r|r}
-Training          & Validation & Test & Ranking   \\ \hline
-$0.451 \pm 0.005$ & 0.245      & 0.163  & 32~/~40 \\ \hline
+Training          & Validation & \textbf{Test}  & \textbf{Ranking} \\ \hline
+$0.451 \pm 0.005$ & 0.245      & \textbf{0.163} & \textbf{32~/~40} \\ \hline
 \end{tabular}
 
-\caption{Challenge scores for our submitted entries (team ``Revenger''). Training: internal hold-out mean $\pm$ std over repeated runs. Validation: best among 10 validation submissions. Test: to be announced. Ranking: position on the hidden validation leaderboard.}
+\caption{Challenge scores for our submitted entries (team ``Revenger''). Training: internal hold-out mean $\pm$ std over repeated runs. Validation: best among 10 validation submissions. Test: the unique test submission. Ranking: position on the hidden test leaderboard.}
 \label{tab:scores}
 \end{table}
 
@@ -412,11 +404,15 @@ $0.451 \pm 0.005$ & 0.245      & 0.163  & 32~/~40 \\ \hline
 
 % almost finished.
 
-The Challenge scores presented in Table~\ref{tab:scores} indicates that our proposed method is effective for Chagas screening from ECGs, albeit with substantial room for improvement. The result demonstrates our model's ability to learn diagnostically relevant features from ECGs for this task under scarce and noisy supervision. This is achieved through reliability-aware label smoothing, which incorporates both label provenance and reliability instead of treating all positive labels uniformly. Together with the asymmetric loss and strategic upsampling, these results indicate that explicitly modeling label reliability helps stabilize the learning process more effectively than introducing additional architectural complexity. Overall, our approach offers a scalable and resource-efficient solution and aligns well with the Challenge's objective of identifying high-risk individuals under limited serological testing capacity.
+The Challenge scores presented in Table~\ref{tab:scores} indicate that our proposed method is effective for Chagas screening from ECGs, albeit with substantial room for improvement. The result demonstrates our model's ability to learn diagnostically relevant features from ECGs for this task under scarce and noisy supervision. This is achieved through reliability-aware label smoothing, which incorporates both label provenance and reliability instead of treating all positive labels uniformly. Together with the asymmetric loss and strategic upsampling, these results indicate that explicitly modeling label reliability helps stabilize the learning process more effectively than introducing additional architectural complexity. Overall, our approach offers a scalable and resource-efficient solution and aligns well with the Challenge's objective of identifying high-risk individuals under limited serological testing capacity.
 
-However, the performance gap between our internal hold-out subset and the hidden validation set suggests two primary limitations. First, the reliability weights (smoothing factors) were pre-defined based on label provenance rather than learned from data. This static assignment cannot capture the inherent heterogeneity of label quality within each source. Second, positive upsampling was applied uniformly at the dataset level using fixed factors. This strategy overlooks variations in individual sample difficulty and does not adapt to the model's evolving confidence during training. Furthermore, we did not make use of the additional labels available in some datasets, such as arrhythmia labels, to design and implement auxiliary learning tasks that could have enhanced the performance of the main task, Chagas screening.
+% However, the performance gap between our internal hold-out subset and the hidden test set suggests two primary limitations. First, the reliability weights (smoothing factors) were pre-defined based on label provenance rather than learned from data. This static assignment cannot capture the inherent heterogeneity of label quality within each source. Second, positive upsampling was applied uniformly at the dataset level using fixed factors. This strategy overlooks variations in individual sample difficulty and does not adapt to the model's evolving confidence during training. Furthermore, we did not make use of the additional labels available in some datasets, such as arrhythmia labels, to design and implement auxiliary learning tasks that could have enhanced the performance of the main task, Chagas screening.
 
-Future research directions will primarily focus on the development of a self-adaptive supervision framework. This includes dynamic weighting schemes for learning instance-specific reliability scores, moving beyond static smoothing factors; and adaptive sampling strategies that respond to the model's evolving confidence during training, offering a promising alternative to fixed upsampling factors. Data augmentation techniques, such as CutMix \cite{yun2019cutmix} and SMOTE \cite{Chawla_2002_SMOTE}, could be applied to further expand and diversify the positive samples, thereby enhancing the model's robustness against overfitting and improving generalization to underrepresented patterns. Additionally, a multi-task learning framework leveraging auxiliary arrhythmia labels could enhance feature representation and improve generalization for the primary Chagas screening task. Exploring self-supervised pre-training on large-scale unlabeled ECG data also represents a promising direction to learn more transferable representations before fine-tuning on the target task.
+However, the performance gap between our internal hold-out subset and the hidden test set indicates limitations in our method's generalization capability. This is also reflected in the absolute performance, where our Challenge score is substantially behind those of the top-performing teams (e.g., 0.323, 0.283, 0.280). The leading approaches generally leveraged some form of large-scale representation learning, such as pre-trained Vision Transformer foundation models or self-supervised learning on extensive ECG datasets. These strategies focus on building robust, general-purpose feature extractors. In contrast, our work prioritized a distinct niche by designing a resource-efficient pipeline that explicitly addresses the challenges of label noise and scarcity through reliability-aware smoothing and asymmetric loss, without relying on massive pretraining. While this choice enhances practicality and stability under noisy supervision, it appears that the representational capacity of our directly-trained model is ultimately lower, limiting its ability to generalize as effectively as the foundation-model-based approaches. Furthermore, our static assignment of reliability weights, which cannot adapt to instance-specific label quality, represents another limitation compared to more dynamic or learned weighting schemes.
+
+% Future research directions will primarily focus on developing a self-adaptive supervision framework. This includes dynamic weighting schemes for learning instance-specific reliability scores, moving beyond static smoothing factors, and adaptive sampling strategies that respond to the model's evolving confidence during training, offering a promising alternative to fixed upsampling factors. Data augmentation techniques, such as CutMix \cite{yun2019cutmix} and SMOTE \cite{Chawla_2002_SMOTE}, could be applied to further expand and diversify the positive samples, thereby enhancing the model's robustness against overfitting and improving generalization to underrepresented patterns. Additionally, a multi-task learning framework leveraging auxiliary arrhythmia labels could enhance feature representation and improve generalization for the primary Chagas screening task. Exploring self-supervised pre-training on large-scale unlabeled ECG data also represents a promising direction to learn more transferable representations before fine-tuning on the target task.
+
+Building upon these insights, future research will focus on bridging the generalization gap while retaining our focus on learning under weak supervision. A primary direction is the self-adaptive supervision framework. This includes dynamic weighting schemes, moving beyond our current static factors, and adaptive sampling strategies that respond to the model's evolving confidence during training. To further improve robustness and handle class imbalance, advanced data augmentation techniques such as CutMix \cite{yun2019cutmix} and SMOTE \cite{Chawla_2002_SMOTE} will be explored to diversify the limited positive samples, with a particular focus on ECG-specific transformations like lead-wise masking. Furthermore, inspired by the success of representation learning, we plan to explore self-supervised pre-training on large-scale unlabeled ECG data as a pivotal step to learn more transferable representations before fine-tuning. This direction, while computationally more demanding, addresses a key limitation identified in our current work. Additionally, a multi-task learning framework leveraging auxiliary arrhythmia labels could be integrated to impose clinically meaningful constraints and enhance the feature representation for the primary Chagas screening task.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
