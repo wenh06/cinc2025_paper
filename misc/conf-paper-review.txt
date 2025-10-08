@@ -1,0 +1,18 @@
+Abstract
+
+Please highlight only the official test score in the abstract, as the cross-validation results are not directly comparable to the official challenge scores.
+In the abstract you have the following sentence: “In cross validation on the public training data, our approach achieved a Challenge score of 0.451” – The goal here is to compare all the teams with just a unique scoring method on the hidden test. So please do not show any results in the training process. Please use the following link to find the mean challenge score: https://moody-challenge.physionet.org/2025/results/.
+
+
+Discussion/Conclusions
+
+The text does not explicitly compare with other papers or methods. It only mentions alternative techniques (CutMix, SMOTE), but not in the context of a fairness-based comparison.
+
+
+References
+
+Please cite the Challenge description papers so that your audience can learn more about the context of your work. These papers will be updated with the final results of the Challenge.
+
+Reyna MA, Koscova Z, Pavlus J, Weigle J, Saghafi S, Gomes P, Elola A, Hassannia, MS, Campbell, K, Bahrami Rad A, Ribeiro AH, Ribeiro ALP, Sameni R, Clifford GD. Detection of Chagas Disease from the ECG: The George B. Moody PhysioNet Challenge 2025; In Computing in Cardiology 2025, volume 52: 2025, 1-4.
+
+Reyna MA, Koscova Z, Pavlus J, Weigle J, Saghafi S, Gomes P, Elola A, Hassannia, MS, Campbell, K, Bahrami Rad A, Ribeiro AH, Ribeiro ALP, Sameni R, Clifford GD. Detection of Chagas Disease from the ECG: The George B. Moody PhysioNet Challenge 2025; 2025: URL: https://arxiv.org/abs/2510.02202, DOI: 10.48550/arXiv.2510.02202.
