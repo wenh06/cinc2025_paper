@@ -68,6 +68,18 @@
 \boxednntrue
 
 
+% --- unify spacing between floats and text (single-/double-column) ---
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}   % text <-> single-column floats (table/figure)
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}      % inline [h] floats
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}       % float <-> float (single-column)
+
+\setlength{\dbltextfloatsep}{6pt plus 2pt minus 2pt} % text <-> double-column floats (figure*)
+\setlength{\dblfloatsep}{6pt plus 2pt minus 2pt}     % float <-> float (double-column)
+
+% --- caption spacing for tables only ---
+\captionsetup[table]{aboveskip=6pt, belowskip=0pt}
+
+
 \newenvironment{indentedquote}[1]%
 {\list{}{\leftmargin=#1\rightmargin=#1}\item[]}%
 {\endlist}
@@ -160,7 +172,7 @@ where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_{\mathbf{x}}$ a
 
 \begin{figure*}[!t]
 \centering
-\adjustbox{width=0.70\linewidth}{
+\adjustbox{width=0.73\linewidth}{
 \begin{tikzpicture}[
     % font=\small,
     line width=0.75pt,
@@ -327,7 +339,8 @@ $^\dagger$ obtained during the unofficial phase.
 Smoothed labels and upsampling strategies for each dataset are summarized in Table~\ref{tab:augmentation}.
 
 
-\begin{table}[!htp]
+% \begin{table}[!htp]
+\begin{table}[!h]
 \centering
 \begin{tabular}{lcccc}
 \toprule
@@ -357,7 +370,7 @@ We build upon the 1D ResNet ECG classifier of Ribeiro et al.~\cite{ribeiro2020au
 
 \textbf{(3) Global pooling head for variable input length.} Instead of flattening a fixed-length feature map as in the original baseline, we apply global max pooling over the remaining temporal dimension, yielding a 1280-dimensional vector irrespective of input length $L$. This vector is fed to a lightweight two-layer classification MLP: a hidden fully connected layer ($1280 \to 1024$) with non-linear activation and dropout (rate 0.2), followed by a final linear layer ($1024 \to 2$) producing class logits.
 
-\textbf{Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block, we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
+\textbf{(4) Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block, we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
 
 % Overall, the changes primarily enable variable-length inference and add global channel reweighting with minimal structural overhead.
 The overall model architecture is illustrated in Fig.~\ref{fig:model}.
