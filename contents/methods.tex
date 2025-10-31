@@ -29,7 +29,7 @@ where $\mathbf{x}$ is the original ECG signal, $\boldsymbol{\mu}_{\mathbf{x}}$ a
 
 \begin{figure*}[!t]
 \centering
-\adjustbox{width=0.70\linewidth}{
+\adjustbox{width=0.73\linewidth}{
 \input{tikz_plots/resnet_nature_comm_bottle_neck}
 }
 \caption{Model architecture. Left: overall network: a stem (Conv1d, kernel size 15, 64 output channels, Batch Normalization, ReLU) followed by four bottleneck residual blocks, a global SE module, global max pooling, and an MLP head producing $C = 2$ logits. Channel widths shown ($512 \to 768 \to 1024 \to 1280$) are the expanded channels.
@@ -64,7 +64,8 @@ $^\dagger$ obtained during the unofficial phase.
 Smoothed labels and upsampling strategies for each dataset are summarized in Table~\ref{tab:augmentation}.
 
 
-\begin{table}[!htp]
+% \begin{table}[!htp]
+\begin{table}[!h]
 \centering
 \input{tables/hierarchical_supervision}
 \caption{Smoothed labels (computed from Eq.~\ref{eq:label_smoothing}) and upsampling strategies for each dataset.}
@@ -85,7 +86,7 @@ We build upon the 1D ResNet ECG classifier of Ribeiro et al.~\cite{ribeiro2020au
 
 \textbf{(3) Global pooling head for variable input length.} Instead of flattening a fixed-length feature map as in the original baseline, we apply global max pooling over the remaining temporal dimension, yielding a 1280-dimensional vector irrespective of input length $L$. This vector is fed to a lightweight two-layer classification MLP: a hidden fully connected layer ($1280 \to 1024$) with non-linear activation and dropout (rate 0.2), followed by a final linear layer ($1024 \to 2$) producing class logits.
 
-\textbf{Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block, we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
+\textbf{(4) Stem and regularization.} A stem Conv1d (kernel size 15, stride 1, 64 channels) with BatchNorm and ReLU precedes the bottleneck stack. Within each bottleneck block, we apply BatchNorm+ReLU after the first two convolutions and dropout (rate 0.2) after each of those activations. All convolutions use “same” padding to preserve temporal length before downsampling operations.
 
 % Overall, the changes primarily enable variable-length inference and add global channel reweighting with minimal structural overhead.
 The overall model architecture is illustrated in Fig.~\ref{fig:model}.

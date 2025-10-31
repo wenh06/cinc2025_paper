@@ -38,6 +38,18 @@
 \boxednntrue
 
 
+% --- unify spacing between floats and text (single-/double-column) ---
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}   % text <-> single-column floats (table/figure)
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}      % inline [h] floats
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}       % float <-> float (single-column)
+
+\setlength{\dbltextfloatsep}{6pt plus 2pt minus 2pt} % text <-> double-column floats (figure*)
+\setlength{\dblfloatsep}{6pt plus 2pt minus 2pt}     % float <-> float (double-column)
+
+% --- caption spacing for tables only ---
+\captionsetup[table]{aboveskip=6pt, belowskip=0pt}
+
+
 \newenvironment{indentedquote}[1]%
 {\list{}{\leftmargin=#1\rightmargin=#1}\item[]}%
 {\endlist}

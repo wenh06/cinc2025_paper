@@ -16,3 +16,13 @@ Please cite the Challenge description papers so that your audience can learn mor
 Reyna MA, Koscova Z, Pavlus J, Weigle J, Saghafi S, Gomes P, Elola A, Hassannia, MS, Campbell, K, Bahrami Rad A, Ribeiro AH, Ribeiro ALP, Sameni R, Clifford GD. Detection of Chagas Disease from the ECG: The George B. Moody PhysioNet Challenge 2025; In Computing in Cardiology 2025, volume 52: 2025, 1-4.
 
 Reyna MA, Koscova Z, Pavlus J, Weigle J, Saghafi S, Gomes P, Elola A, Hassannia, MS, Campbell, K, Bahrami Rad A, Ribeiro AH, Ribeiro ALP, Sameni R, Clifford GD. Detection of Chagas Disease from the ECG: The George B. Moody PhysioNet Challenge 2025; 2025: URL: https://arxiv.org/abs/2510.02202, DOI: 10.48550/arXiv.2510.02202.
+
+
+
+---------------------------------------------------------------
+
+The space after Table 3 is too large, match the spacing of Table 1.
+
+On Page 3, to match your formatting you should have “(4) Stem and regularization.”
+
+Sections 2.3. and 4. spacings are incorrect, match the other headers.
