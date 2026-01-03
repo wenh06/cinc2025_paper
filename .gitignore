@@ -184,7 +184,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.vscode/
+# .vscode/
 
 working_dir
 tmp
@@ -203,3 +203,5 @@ log
 !build
 build/*
 !build/.keep
+
+/*.pdf
