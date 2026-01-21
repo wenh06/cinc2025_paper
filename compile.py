@@ -1,10 +1,10 @@
 import argparse
+import os
 import platform
 import shutil
 import subprocess
 import sys
 import time
-import os
 from pathlib import Path
 from typing import List, Union
 
@@ -21,10 +21,10 @@ def execute_cmd(cmd: Union[str, List[str]], raise_error: bool = True, cwd: Path 
     """
     is_windows = platform.system().lower() == "windows"
     shell_arg = True
-    
+
     # Windows usually uses gbk/cp936, Linux/Mac uses utf-8
     encoding = "gbk" if is_windows else "utf-8"
-    
+
     cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)
     print(f"\n[CMD] Executing: {cmd_str}")
 
@@ -38,16 +38,16 @@ def execute_cmd(cmd: Union[str, List[str]], raise_error: bool = True, cwd: Path 
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,  # Merge stderr into stdout
             cwd=str(cwd) if cwd else None,
-            env=env
+            env=env,
         ) as p:
             if p.stdout:
                 # Read output line by line iteratively to prevent buffer blocking
-                for line in iter(p.stdout.readline, b''):
+                for line in iter(p.stdout.readline, b""):
                     try:
                         line_str = line.decode(encoding, errors="replace").rstrip()
                     except Exception:
                         line_str = line.decode("utf-8", errors="replace").rstrip()
-                    
+
                     if line_str:
                         print(line_str)
                         captured_logs.append(line_str)
@@ -60,7 +60,7 @@ def execute_cmd(cmd: Union[str, List[str]], raise_error: bool = True, cwd: Path 
                 # If failed, print the last 20 lines of log for debugging
                 error_msg += "\n--- Last 20 lines of output ---\n"
                 error_msg += "\n".join(captured_logs[-20:])
-                
+
                 print("\n" + "!" * 10 + "  EXECUTION FAILED  " + "!" * 10)
                 if raise_error:
                     raise subprocess.CalledProcessError(exitcode, cmd, output="\n".join(captured_logs))
@@ -87,7 +87,7 @@ def clean_up(target_file: Path):
             bbl_file.unlink()
         except OSError:
             pass
-    
+
     # Clean up fls files (original logic)
     # Note: pdflatex might generate .fls, keeping original glob logic just in case
     for fls_file in PROJECT_DIR.glob("*.fls"):
@@ -124,10 +124,7 @@ def main(args):
 
     # Construct compilation command
     job_name = tex_entry_file.stem
-    cmd = (
-        f'latexmk -pdf -f -outdir="{str(PROJECT_DIR)}" '
-        f'-jobname="{job_name}" "{str(tex_entry_file)}"'
-    )
+    cmd = f'latexmk -pdf -f -outdir="{str(PROJECT_DIR)}" ' f'-jobname="{job_name}" "{str(tex_entry_file)}"'
 
     # 5. Execute compilation
     try:
@@ -141,14 +138,14 @@ def main(args):
 
     # 6. Process generated files
     generated_pdf = PROJECT_DIR / f"{job_name}.pdf"
-    
+
     if not generated_pdf.exists():
         print("[ERROR] PDF was not generated successfully.")
         sys.exit(1)
 
     # Determine backup/final file path
     suffix = time.strftime("%Y%m%d-%H%M%S")
-    
+
     if custom_output_name:
         # User specified output filename
         backup_pdf_name = custom_output_name
@@ -160,10 +157,10 @@ def main(args):
         backup_pdf_name = f"{tex_entry_file.stem}.pdf"
 
     backup_pdf_path = BUILD_DIR / backup_pdf_name
-    
+
     print(f"\n[INFO] Copying result to: {backup_pdf_path}")
     shutil.copy(generated_pdf, backup_pdf_path)
-    
+
     # Backup log file
     generated_log = generated_pdf.with_suffix(".log")
     if generated_log.exists():
@@ -178,40 +175,24 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compile LaTeX files for CinC2025.")
-    
+
     # First positional argument: Input file (optional)
     parser.add_argument(
-        "tex_entry_file", 
-        nargs="?", 
-        type=Path, 
-        default=None, 
-        help="The .tex file to compile. Defaults to main.tex."
-    )
-    
-    # Second positional argument: Output filename (optional)
-    # Corresponds to original sys.argv[2]
-    parser.add_argument(
-        "output_file_name", 
-        nargs="?", 
-        type=str, 
-        default=None, 
-        help="Custom output PDF name."
-    )
-    
-    parser.add_argument(
-        "--handout", 
-        action="store_true", 
-        help="Compile as handout (defaults to True if compiling main.tex without args)."
-    )
-    
-    parser.add_argument(
-        "--gc", 
-        action="store_true", 
-        help="Garbage collect (clean) build files after compilation."
+        "tex_entry_file", nargs="?", type=Path, default=None, help="The .tex file to compile. Defaults to main.tex."
     )
 
+    # Second positional argument: Output filename (optional)
+    # Corresponds to original sys.argv[2]
+    parser.add_argument("output_file_name", nargs="?", type=str, default=None, help="Custom output PDF name.")
+
+    parser.add_argument(
+        "--handout", action="store_true", help="Compile as handout (defaults to True if compiling main.tex without args)."
+    )
+
+    parser.add_argument("--gc", action="store_true", help="Garbage collect (clean) build files after compilation.")
+
     args = parser.parse_args()
-    
+
     # Path expansion
     if args.tex_entry_file:
         args.tex_entry_file = args.tex_entry_file.expanduser().resolve()
